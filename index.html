@@ -1730,10 +1730,12 @@ async function fetchLiveWeatherPoint(lat, lon){
 // Batched sea-depth lookup via the free Open Topo Data public API (GEBCO
 // bathymetry grid). One request covers every waypoint (locations are '|'-joined).
 // GEBCO elevation is negative below sea level, so depth = -elevation.
-async function fetchBathymetryBatch(waypoints){
+async function fetchBathymetryOnce(waypoints, timeoutMs){
+  const locs = waypoints.map(w=>`${w.lat},${w.lon}`).join('|');
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), timeoutMs);
   try{
-    const locs = waypoints.map(w=>`${w.lat},${w.lon}`).join('|');
-    const res = await fetch(`https://api.opentopodata.org/v1/gebco2020?locations=${locs}`);
+    const res = await fetch(`https://api.opentopodata.org/v1/gebco2020?locations=${locs}`, {signal: controller.signal});
     if(!res.ok){
       const bodyText = await res.text().catch(()=> '');
       return {depths: waypoints.map(()=>null), error: `HTTP ${res.status}${bodyText?': '+bodyText.slice(0,150):''}`};
@@ -1744,8 +1746,25 @@ async function fetchBathymetryBatch(waypoints){
     }
     return {depths: data.results.map(r => r.elevation!=null ? -r.elevation : null), error:null};
   } catch(err){
-    return {depths: waypoints.map(()=>null), error: (err && err.message) ? err.message : String(err)};
+    const msg = (err && err.name==='AbortError') ? `Timeout (>${timeoutMs/1000}s)` : ((err && err.message) ? err.message : String(err));
+    return {depths: waypoints.map(()=>null), error: msg};
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+async function fetchBathymetryBatch(waypoints){
+  // First attempt, fail fast; one retry after a short pause in case it was
+  // a transient network hiccup rather than a hard block.
+  let result = await fetchBathymetryOnce(waypoints, 8000);
+  if(result.error){
+    await new Promise(r=>setTimeout(r, 1200));
+    const retry = await fetchBathymetryOnce(waypoints, 8000);
+    if(!retry.error) return retry;
+    // Keep the more informative of the two error messages
+    result = retry.error ? retry : result;
+  }
+  return result;
 }
 
 // Looks up nearby lighthouses and traffic separation scheme (TSS) zones from
