@@ -270,7 +270,7 @@
     Live δεδομένα: καιρός + ρεύμα (Open-Meteo Marine/Forecast API), βάθος θαλάσσης (Open Topo Data / GEBCO), και φάροι/TSS ζώνες (OpenSeaMap μέσω Overpass API) — όλα δωρεάν, χωρίς key. Το OpenSeaMap είναι crowd-sourced (σαν Wikipedia), όχι επίσημο ENC — καλό για αναφορά/εκπαίδευση, όχι για πραγματική ναυσιπλοΐα. Οι κίνδυνοι/ασφάλεια (πειρατεία, MSI/NAVTEX) παραμένουν curated/στατικά — δεν υπάρχει απλό δωρεάν live API γι' αυτά. Σε πραγματική εφαρμογή θα χρειαζόταν συνδρομή σε υπηρεσία όπως UKMTO/MSCHOA reporting, ή εμπορικό feed (π.χ. Dryad Global, Ambrey).
   </div>
 
-  <footer>Prototype build — δεδομένα καιρού &amp; κινδύνων είναι mock, όχι live.</footer>
+  <footer data-i18n="footerNote">AI Passage Planner — πρωτότυπο εφαρμογής passage planning με live δεδομένα (καιρός, βάθος, φάροι/TSS).</footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
@@ -322,7 +322,8 @@ const I18N = {
     howToNote: 'Τα λιμάνια αρχής/τέλους (πορτοκαλί) δεν μετακινούνται/διαγράφονται — άλλαξέ τα από τα dropdown στη φόρμα. Απόσταση/ταχύτητα/καύσιμα ενημερώνονται αυτόματα σε κάθε αλλαγή.',
     resetZoomBtn: 'Επαναφορά zoom',
     mapDataNote: 'Πραγματικός παγκόσμιος χάρτης (Natural Earth 110m). Κίτρινες κουκκίδες = φάροι, κόκκινοι κύκλοι = ζώνες TSS (OpenSeaMap).',
-    codeNote: `Live δεδομένα: καιρός + ρεύμα (Open-Meteo Marine/Forecast API), βάθος θαλάσσης (Open Topo Data / GEBCO), και φάροι/TSS ζώνες (OpenSeaMap μέσω Overpass API) — όλα δωρεάν, χωρίς key. Το OpenSeaMap είναι crowd-sourced (σαν Wikipedia), όχι επίσημο ENC — καλό για αναφορά/εκπαίδευση, όχι για πραγματική ναυσιπλοΐα. Οι κίνδυνοι/ασφάλεια (πειρατεία, MSI/NAVTEX) παραμένουν curated/στατικά — δεν υπάρχει απλό δωρεάν live API γι' αυτά. Σε πραγματική εφαρμογή θα χρειαζόταν συνδρομή σε υπηρεσία όπως UKMTO/MSCHOA reporting, ή εμπορικό feed (π.χ. Dryad Global, Ambrey).`
+    codeNote: `Live δεδομένα: καιρός + ρεύμα (Open-Meteo Marine/Forecast API), βάθος θαλάσσης (Open Topo Data / GEBCO), και φάροι/TSS ζώνες (OpenSeaMap μέσω Overpass API) — όλα δωρεάν, χωρίς key. Το OpenSeaMap είναι crowd-sourced (σαν Wikipedia), όχι επίσημο ENC — καλό για αναφορά/εκπαίδευση, όχι για πραγματική ναυσιπλοΐα. Οι κίνδυνοι/ασφάλεια (πειρατεία, MSI/NAVTEX) παραμένουν curated/στατικά — δεν υπάρχει απλό δωρεάν live API γι' αυτά. Σε πραγματική εφαρμογή θα χρειαζόταν συνδρομή σε υπηρεσία όπως UKMTO/MSCHOA reporting, ή εμπορικό feed (π.χ. Dryad Global, Ambrey).`,
+    footerNote: 'AI Passage Planner — πρωτότυπο εφαρμογής passage planning με live δεδομένα (καιρός, βάθος, φάροι/TSS).'
   },
   en: {
     title: 'AI Passage Planner <span class="badge">DEMO / prototype</span>',
@@ -358,7 +359,8 @@ const I18N = {
     howToNote: "Start/end ports (amber) can't be moved/deleted this way — change them from the dropdowns in the form. Distance/speed/fuel update automatically on every change.",
     resetZoomBtn: 'Reset zoom',
     mapDataNote: 'Real world map (Natural Earth 110m). Yellow dots = lighthouses, red circles = TSS zones (OpenSeaMap).',
-    codeNote: `Live data: weather + current (Open-Meteo Marine/Forecast API), sea depth (Open Topo Data / GEBCO), and lighthouses/TSS zones (OpenSeaMap via Overpass API) — all free, no key required. OpenSeaMap is crowd-sourced (like Wikipedia), not an official ENC — good for reference/education, not for actual navigation. Security/hazard data (piracy, MSI/NAVTEX) stays curated/static — there is no simple free live API for this. A real production app would need a subscription to a service like UKMTO/MSCHOA reporting, or a commercial feed (e.g. Dryad Global, Ambrey).`
+    codeNote: `Live data: weather + current (Open-Meteo Marine/Forecast API), sea depth (Open Topo Data / GEBCO), and lighthouses/TSS zones (OpenSeaMap via Overpass API) — all free, no key required. OpenSeaMap is crowd-sourced (like Wikipedia), not an official ENC — good for reference/education, not for actual navigation. Security/hazard data (piracy, MSI/NAVTEX) stays curated/static — there is no simple free live API for this. A real production app would need a subscription to a service like UKMTO/MSCHOA reporting, or a commercial feed (e.g. Dryad Global, Ambrey).`,
+    footerNote: 'AI Passage Planner — a passage planning app prototype with live data (weather, depth, lighthouses/TSS).'
   }
 };
 let currentLang = 'el';
