@@ -1,0 +1,2591 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>AI Passage Planner — Πρωτότυπο</title>
+<style>
+  :root{
+    --navy-950:#0A1A28; --navy-900:#0F2438; --navy-800:#16324A; --navy-700:#1F4460;
+    --line:#2C4E6B; --teal:#2FBFA8; --amber:#F2A93B; --coral:#E2574C;
+    --text:#E8EDF2; --muted:#8FA3B8; --mono:'IBM Plex Mono','Courier New',monospace;
+    --sans:'Space Grotesk',Arial,sans-serif; --body:'Inter',Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--navy-950); color:var(--text);
+    font-family:var(--body); line-height:1.5;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:40px 40px; background-attachment:fixed;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 60px;}
+  header{margin-bottom:28px;}
+  header h1{
+    font-family:var(--sans); font-size:26px; font-weight:700; margin:0 0 6px;
+    letter-spacing:0.3px;
+  }
+  header p{color:var(--muted); margin:0; font-size:14px;}
+  .badge{
+    display:inline-block; font-family:var(--mono); font-size:11px; color:var(--amber);
+    border:1px solid var(--amber); border-radius:3px; padding:2px 7px; margin-left:10px; vertical-align:middle;
+  }
+  .grid{display:grid; grid-template-columns:1.1fr 1fr; gap:20px;}
+  @media (max-width:860px){ .grid{grid-template-columns:1fr;} }
+  .panel{
+    background:var(--navy-900); border:1px solid var(--line); border-radius:10px; padding:22px;
+  }
+  .panel h2{
+    font-family:var(--sans); font-size:15px; font-weight:700; margin:0 0 16px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .panel h2::before{content:''; width:8px; height:8px; background:var(--teal); border-radius:50%; display:inline-block;}
+  label{display:block; font-size:12px; color:var(--muted); margin:14px 0 5px;}
+  label:first-of-type{margin-top:0;}
+  input, select, textarea{
+    width:100%; background:var(--navy-800); border:1px solid var(--line); color:var(--text);
+    padding:9px 10px; border-radius:6px; font-family:var(--body); font-size:14px;
+  }
+  input:focus, select:focus, textarea:focus{outline:none; border-color:var(--teal);}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  textarea{resize:vertical; min-height:50px;}
+  button{
+    margin-top:20px; width:100%; background:var(--teal); color:var(--navy-950); border:none;
+    font-family:var(--sans); font-weight:700; font-size:14px; padding:12px; border-radius:6px;
+    cursor:pointer; letter-spacing:0.3px;
+  }
+  button:hover{background:#3fd1b8;}
+  .placeholder{color:var(--muted); font-size:13px; padding:20px 0;}
+  .result-block{margin-bottom:18px; padding-bottom:18px; border-bottom:1px dashed var(--line);}
+  .result-block:last-child{border-bottom:none; margin-bottom:0; padding-bottom:0;}
+  .result-label{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;}
+  .result-value{font-family:var(--mono); font-size:20px; color:var(--teal);}
+  .result-sub{font-size:12px; color:var(--muted); margin-top:3px;}
+  .warn{color:var(--amber);}
+  .danger{color:var(--coral);}
+  .tag{
+    display:inline-block; font-family:var(--mono); font-size:11px; padding:2px 8px; border-radius:3px;
+    margin:3px 6px 0 0; border:1px solid;
+  }
+  .tag.ok{color:var(--teal); border-color:var(--teal);}
+  .tag.warn{color:var(--amber); border-color:var(--amber);}
+  .tag.danger{color:var(--coral); border-color:var(--coral);}
+  .code-note{
+    font-family:var(--mono); font-size:11px; color:var(--muted); background:var(--navy-950);
+    border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-top:18px;
+  }
+  footer{margin-top:26px; font-size:12px; color:var(--muted); text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+    <div>
+      <h1 data-i18n="title">AI Passage Planner <span class="badge">DEMO / πρωτότυπο</span></h1>
+      <p data-i18n="subtitle">Δώσε στοιχεία ταξιδιού — η εφαρμογή υπολογίζει διαδρομή, ταχύτητα, καύσιμα, κινδύνους και ETA.</p>
+    </div>
+    <button id="langToggle" onclick="toggleLanguage()" title="Switch language / Αλλαγή γλώσσας"
+      style="width:auto; margin:0; padding:4px; display:flex; gap:6px; align-items:center; background:transparent; border:1px solid var(--line);">
+      <svg id="flagEl" width="30" height="30" viewBox="0 0 30 30"><defs><clipPath id="clipEl"><circle cx="15" cy="15" r="14"/></clipPath></defs>
+        <g clip-path="url(#clipEl)">
+          <rect width="30" height="30" fill="#0D5EAF"/>
+          <g fill="#fff">
+            <rect y="3.3" width="30" height="3.3"/><rect y="10" width="30" height="3.3"/><rect y="16.6" width="30" height="3.3"/><rect y="23.3" width="30" height="3.3"/>
+            <rect width="13.3" height="16.6"/>
+          </g>
+          <g fill="#0D5EAF"><rect x="5" width="3.3" height="16.6"/><rect y="6.6" width="13.3" height="3.3"/></g>
+        </g>
+      </svg>
+      <svg id="flagEn" width="30" height="30" viewBox="0 0 30 30" style="opacity:0.4;"><defs><clipPath id="clipEn"><circle cx="15" cy="15" r="14"/></clipPath></defs>
+        <g clip-path="url(#clipEn)">
+          <rect width="30" height="30" fill="#012169"/>
+          <g stroke="#fff" stroke-width="4"><line x1="0" y1="0" x2="30" y2="30"/><line x1="30" y1="0" x2="0" y2="30"/></g>
+          <g stroke="#C8102E" stroke-width="2"><line x1="0" y1="0" x2="30" y2="30"/><line x1="30" y1="0" x2="0" y2="30"/></g>
+          <g stroke="#fff" stroke-width="7"><line x1="15" y1="0" x2="15" y2="30"/><line x1="0" y1="15" x2="30" y2="15"/></g>
+          <g stroke="#C8102E" stroke-width="4"><line x1="15" y1="0" x2="15" y2="30"/><line x1="0" y1="15" x2="30" y2="15"/></g>
+        </g>
+      </svg>
+    </button>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <h2 data-i18n="tripDetails">Στοιχεία ταξιδιού</h2>
+
+      <div class="row2">
+        <div>
+          <label data-i18n="vesselNameLabel">Όνομα πλοίου</label>
+          <input type="text" id="vesselName" data-i18n-ph="vesselNamePh" placeholder="π.χ. M/T EXAMPLE">
+        </div>
+        <div>
+          <label data-i18n="imoNoLabel">IMO No.</label>
+          <input type="text" id="imoNo" placeholder="9819870">
+        </div>
+      </div>
+      <label data-i18n="voyageNoLabel">Voyage No.</label>
+      <input type="text" id="voyageNo" placeholder="42B2">
+
+      <label data-i18n="portFrom">Λιμάνι αναχώρησης</label>
+      <select id="portFrom"></select>
+
+      <label data-i18n="portTo">Λιμάνι άφιξης</label>
+      <select id="portTo"></select>
+
+      <label data-i18n="routingModeLabel">Τρόπος πλεύσης</label>
+      <select id="routingMode">
+        <option value="greatcircle" data-i18n="greatCircle">Ορθοδρομία (great circle)</option>
+        <option value="rhumbline" data-i18n="rhumbLine">Λοξοδρομία (rhumb line)</option>
+      </select>
+
+      <div class="row2">
+        <div>
+          <label data-i18n="depTimeLabel">Ημ/νία &amp; ώρα αναχώρησης</label>
+          <input type="datetime-local" id="depTime">
+        </div>
+        <div>
+          <label data-i18n="arrTimeLabel">Επιθυμητή ώρα άφιξης</label>
+          <input type="datetime-local" id="arrTime">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div>
+          <label data-i18n="draughtFwdLabel">Βύθισμα FWD (m)</label>
+          <input type="number" step="0.1" id="draughtFwd" value="12.3">
+        </div>
+        <div>
+          <label data-i18n="draughtAftLabel">Βύθισμα AFT (m)</label>
+          <input type="number" step="0.1" id="draughtAft" value="12.7">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Air draught (m)</label>
+          <input type="number" step="0.1" id="airDraught" value="45">
+        </div>
+        <div>
+          <label data-i18n="cargoQtyLabel">Ποσότητα φορτίου (MT)</label>
+          <input type="number" id="cargoQty" placeholder="π.χ. 80000">
+        </div>
+      </div>
+
+      <label data-i18n="shipTypeLabel">Τύπος δεξαμενόπλοιου</label>
+      <select id="shipType">
+        <option value="vlcc">VLCC</option>
+        <option value="suezmax">Suezmax</option>
+        <option value="aframax">Aframax</option>
+        <option value="panamax">Panamax tanker</option>
+        <option value="mr">MR / Product tanker</option>
+      </select>
+
+      <div class="row2">
+        <div>
+          <label data-i18n="fuelAvailableLabel">Διαθέσιμα καύσιμα (MT)</label>
+          <input type="number" id="fuel" value="450">
+        </div>
+        <div>
+          <label data-i18n="loadStateLabel">Κατάσταση φόρτωσης</label>
+          <select id="loadState">
+            <option value="laden" data-i18n="laden">Φορτωμένο (laden)</option>
+            <option value="ballast" data-i18n="ballast">Με έρμα (ballast)</option>
+          </select>
+        </div>
+      </div>
+
+      <label data-i18n="routingCommandLabel">Εντολή δρομολόγησης (προαιρετικό)</label>
+      <input type="text" id="routingCommand" data-i18n-ph="routingCommandPh" placeholder="π.χ. μην περάσεις από τη Διώρυγα Σουέζ">
+
+      <label data-i18n="policyLabel">Πολιτική εταιρίας</label>
+      <input type="file" id="policyFile" accept=".txt,.md,.docx,.pdf">
+      <div class="result-sub" style="margin:6px 0;" data-i18n="policyManualHint">Ή γράψε χειροκίνητα (αν δεν έχεις αρχείο):</div>
+      <textarea id="policy" data-i18n-ph="policyPh" placeholder="π.χ. eco-speed, μέγιστη ταχύτητα 13kn, αποφυγή high-risk περιοχών χωρίς έγκριση"></textarea>
+      <div id="policySummary" class="result-sub" style="margin-top:6px;"></div>
+
+      <label data-i18n="attachmentLabel">Σχέδιο πλοίου / έγγραφο έκτακτης ανάγκης (προαιρετικό)</label>
+      <input type="file" id="attachmentFile" accept="image/*,.pdf">
+      <div class="result-sub" style="margin-top:4px;" data-i18n="attachmentHint">Αν ανέβει, θα προστεθεί ως παράρτημα στο τέλος του PDF passage plan.</div>
+
+      <label data-i18n="signOffLabel">Στοιχεία υπογραφών για το PDF (προαιρετικό)</label>
+      <div class="row2">
+        <div>
+          <label style="font-weight:400;" data-i18n="masterNameLabel">Όνομα Πλοιάρχου</label>
+          <input type="text" id="masterName" placeholder="π.χ. Ι. Παπαδόπουλος">
+        </div>
+        <div>
+          <label style="font-weight:400;" data-i18n="chiefOfficerNameLabel">Όνομα Υποπλοιάρχου</label>
+          <input type="text" id="chiefOfficerName" placeholder="π.χ. Γ. Νικολάου">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label style="font-weight:400;" data-i18n="chiefEngineerNameLabel">Όνομα Α' Μηχανικού</label>
+          <input type="text" id="chiefEngineerName" placeholder="π.χ. Σ. Δημητρίου">
+        </div>
+        <div>
+          <label style="font-weight:400;" data-i18n="signOffDateLabel">Ημερομηνία υπογραφής</label>
+          <input type="date" id="signOffDate">
+        </div>
+      </div>
+
+      <button onclick="calculatePlan()" data-i18n="calcButton">Υπολογισμός passage plan</button>
+    </div>
+
+    <div class="panel">
+      <h2 data-i18n="resultsHeader">Αποτελέσματα</h2>
+      <div id="results">
+        <p class="placeholder" data-i18n="resultsPlaceholder">Συμπλήρωσε τα στοιχεία και πάτησε υπολογισμό για να δεις τη διαδρομή, ταχύτητα, καύσιμα, κινδύνους και ETA.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:20px;">
+    <h2 data-i18n="mapHeader">Χάρτης διαδρομής</h2>
+    <svg id="worldMap" viewBox="0 0 640 320" style="width:100%; height:auto; background:var(--navy-950); border-radius:6px; cursor:grab;">
+      <rect x="0" y="0" width="640" height="320" fill="transparent"/>
+      <g id="zoomG">
+        <g id="mapLayer"></g>
+        <g id="routeLayer"></g>
+        <g id="seamarksLayer"></g>
+      </g>
+      <g font-family="monospace" font-size="9" fill="var(--text)">
+        <text id="hudCursor" x="8" y="300" paint-order="stroke" stroke="var(--navy-950)" stroke-width="3"></text>
+        <text id="hudSelected" x="8" y="312" paint-order="stroke" stroke="var(--navy-950)" stroke-width="3"></text>
+      </g>
+    </svg>
+    <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+      <div style="font-size:12px; color:var(--muted); line-height:1.7;">
+        <div style="font-weight:700; color:var(--text); margin-bottom:3px;" data-i18n="howToEditTitle">Πώς να επεξεργαστείς τη διαδρομή:</div>
+        <div data-i18n="howToMove">• <strong>Σύρε</strong> ένα teal (ενδιάμεσο) waypoint → το μετακινείς</div>
+        <div data-i18n="howToAdd">• <strong>Διπλό κλικ</strong> σε κενό σημείο του χάρτη → προσθέτεις νέο waypoint εκεί</div>
+        <div data-i18n="howToDelete">• <strong>Δεξί κλικ</strong> σε ένα teal waypoint → το διαγράφεις</div>
+        <div data-i18n="howToPanZoom">• Σύρε σε κενό σημείο → μετακίνηση χάρτη · scroll/pinch → zoom</div>
+        <div style="margin-top:4px;" data-i18n="howToNote">Τα λιμάνια αρχής/τέλους (πορτοκαλί) δεν μετακινούνται/διαγράφονται — άλλαξέ τα από τα dropdown στη φόρμα. Απόσταση/ταχύτητα/καύσιμα ενημερώνονται αυτόματα σε κάθε αλλαγή.</div>
+      </div>
+      <button onclick="resetMapZoom()" style="width:auto; margin:0; padding:4px 10px; font-size:11px; flex-shrink:0;" data-i18n="resetZoomBtn">Επαναφορά zoom</button>
+    </div>
+    <div class="result-sub" style="margin-top:10px;" data-i18n="mapDataNote">Πραγματικός παγκόσμιος χάρτης (Natural Earth 110m). Κίτρινες κουκκίδες = φάροι, κόκκινοι κύκλοι = ζώνες TSS (OpenSeaMap).</div>
+  </div>
+
+  <div class="code-note" data-i18n="codeNote">
+    Live δεδομένα: καιρός + ρεύμα (Open-Meteo Marine/Forecast API), βάθος θαλάσσης (Open Topo Data / GEBCO), και φάροι/TSS ζώνες (OpenSeaMap μέσω Overpass API) — όλα δωρεάν, χωρίς key. Το OpenSeaMap είναι crowd-sourced (σαν Wikipedia), όχι επίσημο ENC — καλό για αναφορά/εκπαίδευση, όχι για πραγματική ναυσιπλοΐα. Οι κίνδυνοι/ασφάλεια (πειρατεία, MSI/NAVTEX) παραμένουν curated/στατικά — δεν υπάρχει απλό δωρεάν live API γι' αυτά. Σε πραγματική εφαρμογή θα χρειαζόταν συνδρομή σε υπηρεσία όπως UKMTO/MSCHOA reporting, ή εμπορικό feed (π.χ. Dryad Global, Ambrey).
+  </div>
+
+  <footer>Prototype build — δεδομένα καιρού &amp; κινδύνων είναι mock, όχι live.</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
+<script>
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+}
+// ============================================================
+// LANGUAGE TOGGLE (static UI only — the generated results panel,
+// waypoint table and hazard notes stay in Greek in this prototype)
+// ============================================================
+const I18N = {
+  el: {
+    title: 'AI Passage Planner <span class="badge">DEMO / πρωτότυπο</span>',
+    subtitle: 'Δώσε στοιχεία ταξιδιού — η εφαρμογή υπολογίζει διαδρομή, ταχύτητα, καύσιμα, κινδύνους και ETA.',
+    tripDetails: 'Στοιχεία ταξιδιού',
+    vesselNameLabel: 'Όνομα πλοίου', vesselNamePh: 'π.χ. M/T EXAMPLE',
+    imoNoLabel: 'IMO No.', voyageNoLabel: 'Voyage No.',
+    draughtFwdLabel: 'Βύθισμα FWD (m)', draughtAftLabel: 'Βύθισμα AFT (m)',
+    cargoQtyLabel: 'Ποσότητα φορτίου (MT)',
+    portFrom: 'Λιμάνι αναχώρησης', portTo: 'Λιμάνι άφιξης',
+    routingModeLabel: 'Τρόπος πλεύσης', greatCircle: 'Ορθοδρομία (great circle)', rhumbLine: 'Λοξοδρομία (rhumb line)',
+    depTimeLabel: 'Ημ/νία &amp; ώρα αναχώρησης', arrTimeLabel: 'Επιθυμητή ώρα άφιξης',
+    shipTypeLabel: 'Τύπος δεξαμενόπλοιου',
+    fuelAvailableLabel: 'Διαθέσιμα καύσιμα (MT)', loadStateLabel: 'Κατάσταση φόρτωσης',
+    laden: 'Φορτωμένο (laden)', ballast: 'Με έρμα (ballast)',
+    routingCommandLabel: 'Εντολή δρομολόγησης (προαιρετικό)', routingCommandPh: 'π.χ. μην περάσεις από τη Διώρυγα Σουέζ',
+    policyLabel: 'Πολιτική εταιρίας', policyManualHint: 'Ή γράψε χειροκίνητα (αν δεν έχεις αρχείο):',
+    policyPh: 'π.χ. eco-speed, μέγιστη ταχύτητα 13kn, αποφυγή high-risk περιοχών χωρίς έγκριση',
+    attachmentLabel: 'Σχέδιο πλοίου / έγγραφο έκτακτης ανάγκης (προαιρετικό)',
+    attachmentHint: 'Αν ανέβει, θα προστεθεί ως παράρτημα στο τέλος του PDF passage plan.',
+    signOffLabel: 'Στοιχεία υπογραφών για το PDF (προαιρετικό)',
+    masterNameLabel: 'Όνομα Πλοιάρχου', chiefOfficerNameLabel: 'Όνομα Υποπλοιάρχου',
+    chiefEngineerNameLabel: "Όνομα Α' Μηχανικού", signOffDateLabel: 'Ημερομηνία υπογραφής',
+    calcButton: 'Υπολογισμός passage plan',
+    resultsHeader: 'Αποτελέσματα',
+    resultsPlaceholder: 'Συμπλήρωσε τα στοιχεία και πάτησε υπολογισμό για να δεις τη διαδρομή, ταχύτητα, καύσιμα, κινδύνους και ETA.',
+    mapHeader: 'Χάρτης διαδρομής',
+    howToEditTitle: 'Πώς να επεξεργαστείς τη διαδρομή:',
+    howToMove: '• <strong>Σύρε</strong> ένα teal (ενδιάμεσο) waypoint → το μετακινείς',
+    howToAdd: '• <strong>Διπλό κλικ</strong> σε κενό σημείο του χάρτη → προσθέτεις νέο waypoint εκεί',
+    howToDelete: '• <strong>Δεξί κλικ</strong> σε ένα teal waypoint → το διαγράφεις',
+    howToPanZoom: '• Σύρε σε κενό σημείο → μετακίνηση χάρτη · scroll/pinch → zoom',
+    howToNote: 'Τα λιμάνια αρχής/τέλους (πορτοκαλί) δεν μετακινούνται/διαγράφονται — άλλαξέ τα από τα dropdown στη φόρμα. Απόσταση/ταχύτητα/καύσιμα ενημερώνονται αυτόματα σε κάθε αλλαγή.',
+    resetZoomBtn: 'Επαναφορά zoom',
+    mapDataNote: 'Πραγματικός παγκόσμιος χάρτης (Natural Earth 110m). Κίτρινες κουκκίδες = φάροι, κόκκινοι κύκλοι = ζώνες TSS (OpenSeaMap).',
+    codeNote: `Live δεδομένα: καιρός + ρεύμα (Open-Meteo Marine/Forecast API), βάθος θαλάσσης (Open Topo Data / GEBCO), και φάροι/TSS ζώνες (OpenSeaMap μέσω Overpass API) — όλα δωρεάν, χωρίς key. Το OpenSeaMap είναι crowd-sourced (σαν Wikipedia), όχι επίσημο ENC — καλό για αναφορά/εκπαίδευση, όχι για πραγματική ναυσιπλοΐα. Οι κίνδυνοι/ασφάλεια (πειρατεία, MSI/NAVTEX) παραμένουν curated/στατικά — δεν υπάρχει απλό δωρεάν live API γι' αυτά. Σε πραγματική εφαρμογή θα χρειαζόταν συνδρομή σε υπηρεσία όπως UKMTO/MSCHOA reporting, ή εμπορικό feed (π.χ. Dryad Global, Ambrey).`
+  },
+  en: {
+    title: 'AI Passage Planner <span class="badge">DEMO / prototype</span>',
+    subtitle: 'Enter your voyage details — the app calculates route, speed, fuel, hazards and ETA.',
+    tripDetails: 'Voyage details',
+    vesselNameLabel: 'Vessel name', vesselNamePh: 'e.g. M/T EXAMPLE',
+    imoNoLabel: 'IMO No.', voyageNoLabel: 'Voyage No.',
+    draughtFwdLabel: 'Draught FWD (m)', draughtAftLabel: 'Draught AFT (m)',
+    cargoQtyLabel: 'Cargo quantity (MT)',
+    portFrom: 'Departure port', portTo: 'Arrival port',
+    routingModeLabel: 'Course type', greatCircle: 'Great circle', rhumbLine: 'Rhumb line',
+    depTimeLabel: 'Departure date &amp; time', arrTimeLabel: 'Desired arrival time',
+    shipTypeLabel: 'Tanker type',
+    fuelAvailableLabel: 'Fuel available (MT)', loadStateLabel: 'Load condition',
+    laden: 'Laden', ballast: 'Ballast',
+    routingCommandLabel: 'Routing command (optional)', routingCommandPh: 'e.g. avoid the Suez Canal',
+    policyLabel: 'Company policy', policyManualHint: 'Or type it manually (if you have no file):',
+    policyPh: 'e.g. eco-speed, max speed 13kn, avoid high-risk areas without approval',
+    attachmentLabel: "Ship's plan / emergency document (optional)",
+    attachmentHint: 'If uploaded, it will be appended to the end of the PDF passage plan.',
+    signOffLabel: 'Sign-off details for the PDF (optional)',
+    masterNameLabel: 'Master name', chiefOfficerNameLabel: 'Chief Officer name',
+    chiefEngineerNameLabel: 'Chief Engineer name', signOffDateLabel: 'Sign-off date',
+    calcButton: 'Calculate passage plan',
+    resultsHeader: 'Results',
+    resultsPlaceholder: 'Fill in the details and press calculate to see the route, speed, fuel, hazards and ETA.',
+    mapHeader: 'Route map',
+    howToEditTitle: 'How to edit the route:',
+    howToMove: '• <strong>Drag</strong> a teal (intermediate) waypoint → move it',
+    howToAdd: '• <strong>Double-click</strong> empty water on the map → add a new waypoint there',
+    howToDelete: '• <strong>Right-click</strong> a teal waypoint → delete it',
+    howToPanZoom: '• Drag empty space → pan the map · scroll/pinch → zoom',
+    howToNote: "Start/end ports (amber) can't be moved/deleted this way — change them from the dropdowns in the form. Distance/speed/fuel update automatically on every change.",
+    resetZoomBtn: 'Reset zoom',
+    mapDataNote: 'Real world map (Natural Earth 110m). Yellow dots = lighthouses, red circles = TSS zones (OpenSeaMap).',
+    codeNote: `Live data: weather + current (Open-Meteo Marine/Forecast API), sea depth (Open Topo Data / GEBCO), and lighthouses/TSS zones (OpenSeaMap via Overpass API) — all free, no key required. OpenSeaMap is crowd-sourced (like Wikipedia), not an official ENC — good for reference/education, not for actual navigation. Security/hazard data (piracy, MSI/NAVTEX) stays curated/static — there is no simple free live API for this. A real production app would need a subscription to a service like UKMTO/MSCHOA reporting, or a commercial feed (e.g. Dryad Global, Ambrey).`
+  }
+};
+let currentLang = 'el';
+
+// Mean draught (used for UKC/canal checks) and trim, from the FWD/AFT inputs.
+// Trim by the stern (AFT deeper) is positive, by the head is negative.
+function getMeanDraught(){
+  const fwd = parseFloat(document.getElementById('draughtFwd').value);
+  const aft = parseFloat(document.getElementById('draughtAft').value);
+  if(!isNaN(fwd) && !isNaN(aft)) return (fwd+aft)/2;
+  return !isNaN(fwd) ? fwd : (!isNaN(aft) ? aft : 0);
+}
+function getTrim(){
+  const fwd = parseFloat(document.getElementById('draughtFwd').value);
+  const aft = parseFloat(document.getElementById('draughtAft').value);
+  if(isNaN(fwd) || isNaN(aft)) return null;
+  return +(aft-fwd).toFixed(2);
+}
+
+function applyLanguage(lang){
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  const dict = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if(dict[key]!=null) el.innerHTML = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const key = el.getAttribute('data-i18n-ph');
+    if(dict[key]!=null) el.setAttribute('placeholder', dict[key]);
+  });
+  const flagEl = document.getElementById('flagEl'), flagEn = document.getElementById('flagEn');
+  if(flagEl && flagEn){
+    flagEl.style.opacity = lang==='el' ? '1' : '0.4';
+    flagEn.style.opacity = lang==='en' ? '1' : '0.4';
+  }
+}
+
+function toggleLanguage(){
+  applyLanguage(currentLang==='el' ? 'en' : 'el');
+}
+
+// ---- Reference port data: [name, lat, lon] ----
+// The 50 largest/most significant world ports by cargo & container throughput.
+// TODO: replace with a full ENC/port database or a ports API
+const PORTS = {
+  piraeus:   {label:"Piraeus, Ελλάδα",      lat:37.94, lon:23.63},
+  rotterdam: {label:"Rotterdam, Ολλανδία",  lat:51.95, lon:4.14},
+  singapore: {label:"Singapore",            lat:1.29,  lon:103.85},
+  fujairah:  {label:"Fujairah, ΗΑΕ",        lat:25.11, lon:56.34},
+  gibraltar: {label:"Gibraltar",            lat:36.14, lon:-5.35},
+  suez:      {label:"Suez, Αίγυπτος",       lat:29.97, lon:32.55},
+  panama:    {label:"Panama Canal",         lat:9.08,  lon:-79.68},
+  santos:    {label:"Santos, Βραζιλία",     lat:-23.96,lon:-46.33},
+  houston:   {label:"Houston, ΗΠΑ",         lat:29.75, lon:-95.36},
+  shanghai:  {label:"Shanghai, Κίνα",       lat:31.23, lon:121.47},
+  mumbai:    {label:"Mumbai, Ινδία",        lat:18.94, lon:72.84},
+  durban:    {label:"Durban, Ν.Αφρική",     lat:-29.87,lon:31.02},
+
+  ningbo:         {label:"Ningbo-Zhoushan, Κίνα",     lat:29.87,  lon:121.55},
+  shenzhen:       {label:"Shenzhen, Κίνα",             lat:22.54,  lon:114.05},
+  guangzhou:      {label:"Guangzhou (Nansha), Κίνα",   lat:22.75,  lon:113.60},
+  hongkong:       {label:"Hong Kong",                  lat:22.30,  lon:114.17},
+  qingdao:        {label:"Qingdao, Κίνα",              lat:36.07,  lon:120.38},
+  tianjin:        {label:"Tianjin, Κίνα",              lat:38.98,  lon:117.72},
+  dalian:         {label:"Dalian, Κίνα",               lat:38.92,  lon:121.60},
+  busan:          {label:"Busan, Ν.Κορέα",             lat:35.10,  lon:129.04},
+  xiamen:         {label:"Xiamen, Κίνα",               lat:24.48,  lon:118.06},
+  kaohsiung:      {label:"Kaohsiung, Ταϊβάν",          lat:22.61,  lon:120.28},
+  portklang:      {label:"Port Klang, Μαλαισία",       lat:3.00,   lon:101.39},
+  tanjungpelepas: {label:"Tanjung Pelepas, Μαλαισία",  lat:1.36,   lon:103.55},
+  laemchabang:    {label:"Laem Chabang, Ταϊλάνδη",     lat:13.08,  lon:100.88},
+  jakarta:        {label:"Jakarta, Ινδονησία",         lat:-6.10,  lon:106.88},
+  caimep:         {label:"Cai Mep, Βιετνάμ",           lat:10.58,  lon:107.02},
+  manila:         {label:"Manila, Φιλιππίνες",         lat:14.58,  lon:120.97},
+  colombo:        {label:"Colombo, Σρι Λάνκα",         lat:6.95,   lon:79.84},
+  nhavasheva:     {label:"Nhava Sheva (JNPT), Ινδία",  lat:18.95,  lon:72.95},
+  mundra:         {label:"Mundra, Ινδία",              lat:22.84,  lon:69.72},
+  chennai:        {label:"Chennai, Ινδία",             lat:13.08,  lon:80.29},
+  jebelali:       {label:"Jebel Ali, ΗΑΕ",             lat:25.01,  lon:55.06},
+  jeddah:         {label:"Jeddah, Σ.Αραβία",           lat:21.48,  lon:39.17},
+  antwerp:        {label:"Antwerp-Bruges, Βέλγιο",     lat:51.24,  lon:4.40},
+  hamburg:        {label:"Hamburg, Γερμανία",          lat:53.55,  lon:9.99},
+  valencia:       {label:"Valencia, Ισπανία",          lat:39.44,  lon:-0.32},
+  algeciras:      {label:"Algeciras, Ισπανία",         lat:36.13,  lon:-5.44},
+  felixstowe:     {label:"Felixstowe, Η.Β.",           lat:51.96,  lon:1.35},
+  lehavre:        {label:"Le Havre, Γαλλία",           lat:49.49,  lon:0.11},
+  tangermed:      {label:"Tanger Med, Μαρόκο",         lat:35.88,  lon:-5.50},
+  lagos:          {label:"Lagos, Νιγηρία",             lat:6.45,   lon:3.39},
+  losangeles:     {label:"Los Angeles, ΗΠΑ",           lat:33.74,  lon:-118.27},
+  longbeach:      {label:"Long Beach, ΗΠΑ",            lat:33.75,  lon:-118.19},
+  newyork:        {label:"New York/New Jersey, ΗΠΑ",   lat:40.67,  lon:-74.09},
+  savannah:       {label:"Savannah, ΗΠΑ",              lat:32.08,  lon:-81.09},
+  vancouver:      {label:"Vancouver, Καναδάς",         lat:49.29,  lon:-123.11},
+  cartagena:      {label:"Cartagena, Κολομβία",        lat:10.40,  lon:-75.51},
+  callao:         {label:"Callao, Περού",              lat:-12.05, lon:-77.15},
+  melbourne:      {label:"Melbourne, Αυστραλία",       lat:-37.84, lon:144.93}
+};
+
+// Typical service speed (kn), daily fuel consumption (MT/day) at service speed,
+// and typical laden draught (m), by tanker class.
+// TODO: replace with real ship particulars from a fleet/vessel database (per-vessel, not per-class)
+const SHIP_PROFILES = {
+  vlcc:     {label:"VLCC",               serviceSpeed:15,   dailyFuelAtService:85, typicalDraught:22.0},
+  suezmax:  {label:"Suezmax",            serviceSpeed:15,   dailyFuelAtService:55, typicalDraught:16.5},
+  aframax:  {label:"Aframax",            serviceSpeed:14.5, dailyFuelAtService:40, typicalDraught:14.5},
+  panamax:  {label:"Panamax tanker",     serviceSpeed:14,   dailyFuelAtService:35, typicalDraught:12.0},
+  mr:       {label:"MR / Product tanker",serviceSpeed:14,   dailyFuelAtService:25, typicalDraught:11.0}
+};
+
+// Canal particulars (draught/air-draught limits only — the actual canal
+// locations are now part of the routing graph below as NODES).
+// TODO: replace with live UKHO/Admiralty Sailing Directions + canal authority notices (SCA, ACP)
+const CANALS = {
+  suez:   {label:"Διώρυγα Σουέζ",  maxDraught:20.1, maxAirDraught:null,
+           note:"Χωρίς σταθερές γέφυρες στο κανάλι· περιορισμός κυρίως στο draught."},
+  panama: {label:"Διώρυγα Παναμά", maxDraught:15.2, maxAirDraught:57.9,
+           note:"Γέφυρα Bridge of the Americas (Balboa) περιορίζει το air draught."}
+};
+
+// Extra nodes: known sea chokepoints and open-ocean waypoints used to keep
+// routes over water instead of cutting straight lines across land.
+// TODO: replace this whole graph with a real maritime routing engine (e.g. a
+// searoute-style network built from actual sea-lane/AIS density data)
+const EXTRA_NODES = {
+  suez_north:       {label:"Port Said (βόρεια είσοδος Σουέζ)", lat:31.26, lon:32.31},
+  bab_el_mandeb:    {label:"Στενά Bab-el-Mandeb",              lat:12.58, lon:43.33},
+  malacca:          {label:"Στενά Μαλάκκα",                    lat:2.50,  lon:101.50},
+  med_mid:          {label:"Κεντρική Μεσόγειος",                lat:35.5,  lon:18.0},
+  gulf_aden_mid:    {label:"Κόλπος του Άντεν",                  lat:12.5,  lon:48.0},
+  arabian_sea_mid:  {label:"Αραβική Θάλασσα",                   lat:15.0,  lon:63.0},
+  bay_of_biscay:    {label:"Κόλπος Βισκάης",                    lat:46.0,  lon:-8.0},
+  english_channel:  {label:"Αγγλικό Κανάλι",                    lat:50.5,  lon:1.0},
+  cape_good_hope:   {label:"Ακρωτήριο Καλής Ελπίδας",           lat:-35.0, lon:20.0},
+  mid_atlantic_n:   {label:"Βόρειος Ατλαντικός",                lat:25.0,  lon:-45.0},
+  mid_atlantic_s:   {label:"Νότιος Ατλαντικός",                 lat:-10.0, lon:-25.0},
+  indian_ocean_mid: {label:"Ανοιχτός Ινδικός Ωκεανός",          lat:-10.0, lon:70.0},
+  panama_atl:       {label:"Colon (Ατλαντική είσοδος Παναμά)",  lat:9.36,  lon:-79.90},
+  panama_pac:       {label:"Balboa (Ειρηνική έξοδος Παναμά)",   lat:8.95,  lon:-79.57},
+  caribbean_mid:    {label:"Καραϊβική Θάλασσα",                 lat:18.0,  lon:-75.0},
+  pacific_mid:      {label:"Ανοιχτός Ειρηνικός",                lat:15.0,  lon:-170.0},
+  socotra_pass:     {label:"Νότια της Σοκότρα",                 lat:10.5,  lon:56.0},
+  galicia_pt:       {label:"Δυτικά της Γαλικίας",                lat:43.5,  lon:-10.0},
+  lisbon_pt:        {label:"Δυτικά της Λισαβόνας",               lat:38.0,  lon:-10.5},
+  cape_stvincent_pt:{label:"Νότια Ακρωτηρίου Αγ. Βικεντίου",     lat:36.5,  lon:-9.3},
+  ushant_pt:        {label:"Δυτικά Ouessant (Βρετάνη)",          lat:48.3,  lon:-6.5},
+  med_west_pt:      {label:"Θάλασσα Αλμποράν",                    lat:36.5,  lon:-2.0},
+  north_sea_pt:     {label:"Νότια Θάλασσα (προς Κανάλι)",          lat:51.25, lon:2.0},
+  balearic_pt:      {label:"Νότια Βαλεαρίδων",                    lat:37.5,  lon:4.5},
+  sicily_channel_pt:{label:"Στενά Σικελίας",                      lat:37.5,  lon:10.65},
+  s_peloponnese_pt: {label:"Νότια Πελοποννήσου",                  lat:35.8,  lon:23.5},
+  madagascar_pt:    {label:"Νότια Μαδαγασκάρης",                  lat:-26.0, lon:47.0},
+  scs_open_pt:      {label:"Ανοιχτή Νότια Σινική Θάλασσα",        lat:12.0,  lon:114.0},
+  philippines_pt:   {label:"Δυτικά Φιλιππίνων",                    lat:15.0,  lon:116.0},
+  taiwan_east_pt:   {label:"Ανατολικά Ταϊβάν",                     lat:21.0,  lon:118.5},
+  eastchina_pt:     {label:"Ανατολική Σινική Θάλασσα",             lat:27.0,  lon:121.5},
+  shanghai_offshore_pt:{label:"Ανοιχτά Σαγκάης",                   lat:30.5,  lon:123.0},
+  antilles_south_pt:{label:"Νότια Μεγάλων Αντιλλών",              lat:15.0,  lon:-68.0},
+  sw_caribbean_pt:  {label:"ΝΔ Καραϊβική",                         lat:14.0,  lon:-78.0},
+  yucatan_pt:       {label:"Πέρασμα Γιουκατάν",                    lat:21.5,  lon:-85.0},
+  gulf_mid_pt:      {label:"Κεντρικός Κόλπος Μεξικού",             lat:24.5,  lon:-88.0},
+  houston_offshore_pt:{label:"Ανοιχτά Houston",                    lat:28.0,  lon:-92.5},
+  agulhas_bank_pt:  {label:"Τράπεζα Agulhas",                      lat:-35.0, lon:23.0},
+  algoa_pt:         {label:"Νότια Port Elizabeth (Ν.Αφρική)",     lat:-34.5, lon:26.0},
+  transkei_pt:      {label:"Ανοιχτά Transkei (Ν.Αφρική)",         lat:-33.5, lon:28.5},
+  natal_pt:         {label:"Νότια Natal (Ν.Αφρική)",              lat:-31.5, lon:30.5},
+  fujian_coast_pt:  {label:"Ανοιχτά Fujian (Κίνα)",               lat:24.5,  lon:118.5},
+  taiwanstrait_pt:  {label:"Στενά Ταϊβάν",                         lat:24.5,  lon:118.9},
+  zhejiang_coast_pt:{label:"Ανοιχτά Zhejiang (Κίνα)",             lat:28.5,  lon:122.1},
+  bohai_pt:         {label:"Κόλπος Bohai (Κίνα)",                  lat:38.9,  lon:117.9},
+  yellowsea_pt:     {label:"Κίτρινη Θάλασσα",                      lat:37.4,  lon:122.7},
+  shandong_pt:      {label:"Ανατολικά Shandong (Κίνα)",           lat:36.3,  lon:122.4},
+  german_bight_pt:  {label:"Κόλπος Γερμανίας",                     lat:54.15, lon:8.34},
+  wadden_sea_pt:    {label:"Θάλασσα Wadden",                       lat:53.35, lon:4.74},
+  spain_med_coast_pt:{label:"Ανοιχτά Αλικάντε (Ισπανία)",         lat:39.14, lon:0.05},
+  alicante_pt:      {label:"Ανοιχτά Μούρθια (Ισπανία)",           lat:38.74, lon:0.45},
+  alboran_west_pt:  {label:"Δυτική Θάλασσα Αλμποράν",             lat:36.74, lon:-1.55},
+  peru_coast_pt:    {label:"Ανοιχτά Περού",                        lat:-12.0, lon:-77.3},
+  ecuador_coast_pt: {label:"Ανοιχτά Ισημερινού (1)",              lat:-6.0,  lon:-81.3},
+  ecuador_coast2_pt:{label:"Ανοιχτά Ισημερινού (2)",              lat:-4.8,  lon:-81.3},
+  colombia_coast_pt:{label:"Ανοιχτά Κολομβίας (Ειρηνικός)",       lat:0.8,   lon:-81.3},
+  oman_coast_pt:    {label:"Ανοιχτά Ομάν",                         lat:22.8,  lon:59.74},
+  gulf_thailand_pt: {label:"Κόλπος Ταϊλάνδης",                     lat:1.5,   lon:104.48},
+  malay_coast_pt:   {label:"Ανοιχτά Μαλαισίας (Αν.)",             lat:1.3,   lon:104.28},
+  malacca_north_pt: {label:"Βόρεια Στενών Μαλάκκα",               lat:1.1,   lon:103.68},
+  scs_south_pt:     {label:"Νότια Σινική Θάλασσα (Ν.)",           lat:2.5,   lon:105.5},
+  riau_pt:          {label:"Νήσοι Riau (1)",                       lat:1.25,  lon:104.25},
+  riau2_pt:         {label:"Νήσοι Riau (2)",                       lat:1.25,  lon:104.0},
+  malacca_east_pt:  {label:"Ανατολικά Στενών Μαλάκκα",            lat:1.25,  lon:102.75},
+  sumatra_coast_pt: {label:"Ανοιχτά Σουμάτρας",                    lat:-5.5,  lon:106.5},
+  java_sea_pt:      {label:"Θάλασσα Ιάβας",                        lat:-2.75, lon:107.0},
+  karimata_pt:      {label:"Στενά Karimata",                       lat:-1.5,  lon:106.0},
+  bangka_strait_pt: {label:"Στενά Bangka",                         lat:0.25,  lon:103.75},
+  malacca_south_pt: {label:"Νότια Στενών Μαλάκκα",                lat:2.25,  lon:102.0},
+  dover_pt:         {label:"Στενά Dover (1)",                      lat:51.3,  lon:1.5},
+  dover2_pt:        {label:"Στενά Dover (2)",                      lat:50.85, lon:1.2}
+};
+
+const NODES = {...PORTS, ...EXTRA_NODES};
+
+// Edges = known-safe direct sea passages between two nodes (curated by hand).
+// The router only ever travels along these edges, so it can't cut across land.
+const EDGES = [
+  ["rotterdam","north_sea_pt"], ["north_sea_pt","english_channel"], ["english_channel","ushant_pt"], ["ushant_pt","bay_of_biscay"],
+  ["bay_of_biscay","galicia_pt"], ["galicia_pt","lisbon_pt"], ["lisbon_pt","cape_stvincent_pt"], ["cape_stvincent_pt","gibraltar"],
+  ["gibraltar","med_west_pt"], ["med_west_pt","balearic_pt"], ["balearic_pt","sicily_channel_pt"], ["sicily_channel_pt","med_mid"],
+  ["med_mid","s_peloponnese_pt"], ["s_peloponnese_pt","piraeus"], ["med_mid","suez_north"], ["suez_north","suez"],
+  ["suez","bab_el_mandeb"], ["bab_el_mandeb","gulf_aden_mid"],
+  ["gulf_aden_mid","socotra_pass"], ["socotra_pass","arabian_sea_mid"],
+  ["arabian_sea_mid","oman_coast_pt"], ["oman_coast_pt","fujairah"],
+  ["arabian_sea_mid","mumbai"], ["arabian_sea_mid","indian_ocean_mid"],
+  ["indian_ocean_mid","malacca"], ["indian_ocean_mid","madagascar_pt"], ["madagascar_pt","durban"],
+  ["malacca","singapore"], ["singapore","scs_open_pt"], ["scs_open_pt","philippines_pt"],
+  ["philippines_pt","taiwan_east_pt"], ["taiwan_east_pt","eastchina_pt"], ["eastchina_pt","shanghai_offshore_pt"], ["shanghai_offshore_pt","shanghai"],
+  ["bay_of_biscay","mid_atlantic_n"], ["mid_atlantic_n","mid_atlantic_s"],
+  ["mid_atlantic_n","antilles_south_pt"], ["antilles_south_pt","caribbean_mid"], ["caribbean_mid","panama_atl"],
+  ["caribbean_mid","sw_caribbean_pt"], ["sw_caribbean_pt","yucatan_pt"], ["yucatan_pt","gulf_mid_pt"], ["gulf_mid_pt","houston_offshore_pt"], ["houston_offshore_pt","houston"],
+  ["panama_atl","panama"], ["panama","panama_pac"],
+  ["panama_pac","pacific_mid"], ["pacific_mid","shanghai"], ["pacific_mid","singapore"],
+  ["mid_atlantic_s","santos"], ["mid_atlantic_s","cape_good_hope"], ["cape_good_hope","agulhas_bank_pt"],
+  ["agulhas_bank_pt","algoa_pt"], ["algoa_pt","transkei_pt"], ["transkei_pt","natal_pt"], ["natal_pt","durban"],
+
+  ["ningbo","shanghai"], ["shenzhen","scs_south_pt"], ["scs_south_pt","riau_pt"], ["riau_pt","riau2_pt"], ["riau2_pt","malacca_east_pt"], ["malacca_east_pt","malacca"],
+  ["guangzhou","shenzhen"],
+  ["hongkong","shenzhen"], ["qingdao","shanghai"], ["tianjin","bohai_pt"], ["bohai_pt","yellowsea_pt"], ["yellowsea_pt","shandong_pt"], ["shandong_pt","qingdao"],
+  ["dalian","tianjin"], ["busan","shanghai"],
+  ["xiamen","fujian_coast_pt"], ["fujian_coast_pt","taiwanstrait_pt"], ["taiwanstrait_pt","zhejiang_coast_pt"], ["zhejiang_coast_pt","shanghai_offshore_pt"],
+  ["kaohsiung","xiamen"], ["portklang","malacca"], ["tanjungpelepas","singapore"],
+  ["laemchabang","gulf_thailand_pt"], ["gulf_thailand_pt","malay_coast_pt"], ["malay_coast_pt","malacca_north_pt"], ["malacca_north_pt","malacca"],
+  ["jakarta","sumatra_coast_pt"], ["sumatra_coast_pt","java_sea_pt"], ["java_sea_pt","karimata_pt"], ["karimata_pt","bangka_strait_pt"], ["bangka_strait_pt","malacca_south_pt"], ["malacca_south_pt","malacca"], ["caimep","singapore"],
+  ["manila","hongkong"], ["colombo","indian_ocean_mid"], ["colombo","arabian_sea_mid"],
+  ["nhavasheva","mumbai"], ["mundra","arabian_sea_mid"], ["chennai","indian_ocean_mid"],
+  ["jebelali","fujairah"], ["jeddah","bab_el_mandeb"], ["antwerp","rotterdam"],
+  ["hamburg","german_bight_pt"], ["german_bight_pt","wadden_sea_pt"], ["wadden_sea_pt","rotterdam"],
+  ["valencia","spain_med_coast_pt"], ["spain_med_coast_pt","alicante_pt"], ["alicante_pt","alboran_west_pt"], ["alboran_west_pt","gibraltar"],
+  ["algeciras","gibraltar"],
+  ["felixstowe","dover_pt"], ["dover_pt","dover2_pt"], ["dover2_pt","english_channel"],
+  ["lehavre","english_channel"], ["tangermed","gibraltar"],
+  ["lagos","mid_atlantic_s"], ["losangeles","pacific_mid"], ["longbeach","losangeles"],
+  ["newyork","mid_atlantic_n"], ["savannah","mid_atlantic_n"], ["vancouver","pacific_mid"],
+  ["cartagena","caribbean_mid"],
+  ["callao","peru_coast_pt"], ["peru_coast_pt","ecuador_coast_pt"], ["ecuador_coast_pt","ecuador_coast2_pt"], ["ecuador_coast2_pt","colombia_coast_pt"], ["colombia_coast_pt","panama_pac"],
+  ["melbourne","indian_ocean_mid"], ["melbourne","pacific_mid"]
+];
+
+// Chokepoints the person is allowed to ask to avoid (deliberately excludes
+// ports themselves and open-ocean hub nodes, which shouldn't be "avoidable").
+const AVOIDABLE_CHOKEPOINTS = ["suez","panama","gibraltar","bab_el_mandeb","gulf_aden_mid","malacca","cape_good_hope"];
+
+// Reads raw text out of an uploaded policy file. Supports plain text/markdown
+// natively, .docx via mammoth.js, and .pdf via pdf.js (both loaded from CDN).
+async function extractTextFromFile(file){
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(ext==='txt' || ext==='md'){
+    return await file.text();
+  }
+  if(ext==='docx'){
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await window.mammoth.extractRawText({arrayBuffer});
+    return result.value;
+  }
+  if(ext==='pdf'){
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+    let text='';
+    for(let i=1;i<=pdf.numPages;i++){
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(it=>it.str).join(' ') + '\n';
+    }
+    return text;
+  }
+  throw new Error('Μη υποστηριζόμενος τύπος αρχείου');
+}
+
+const POLICY_NEGATION_WORDS = ["αποφυγ","απαγορε","μην περν","μην διερχ","δεν επιτρεπ","do not transit","avoid","prohibited","not permitted","without approval","χωρις εγκριση"];
+
+// Scans free-text company policy (typed or extracted from an uploaded file)
+// for a few concrete, checkable parameters. This is a keyword/regex heuristic,
+// not real language understanding — it won't catch every phrasing, but it's
+// deterministic, instant, and needs no external AI call (see the routing
+// command parser above for why that matters in a standalone file like this).
+function extractPolicyParameters(rawText){
+  const text = rawText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const avoid = new Set();
+
+  const checkChokepoint = (word, key1, key2)=>{
+    let idx=text.indexOf(word);
+    while(idx!==-1){
+      const windowText=text.slice(Math.max(0,idx-80), idx+80);
+      if(POLICY_NEGATION_WORDS.some(n=>windowText.includes(n))){
+        avoid.add(key1); if(key2) avoid.add(key2);
+      }
+      idx=text.indexOf(word, idx+1);
+    }
+  };
+  Object.entries(CHOKEPOINT_KEYWORDS).forEach(([key,words])=>words.forEach(w=>checkChokepoint(w,key)));
+  ADEN_KEYWORDS.forEach(w=>checkChokepoint(w,"bab_el_mandeb","gulf_aden_mid"));
+
+  let maxSpeedKn=null;
+  const speedMatch = text.match(/(?:μεγιστη ταχυτητα|max(?:imum)? speed|speed limit|μην υπερβαινετε)[^\d]{0,20}(\d{1,2}(?:\.\d)?)\s*(?:kn|knots|κομβ)/)
+                   || text.match(/(\d{1,2}(?:\.\d)?)\s*(?:kn|knots|κομβ)/);
+  if(speedMatch) maxSpeedKn = parseFloat(speedMatch[1]);
+
+  let minReservePct=null;
+  const reserveMatch = text.match(/(\d{1,2})\s*%[^.]{0,30}(?:αποθεμα|reserve)/) || text.match(/(?:αποθεμα|reserve)[^\d]{0,20}(\d{1,2})\s*%/);
+  if(reserveMatch) minReservePct = parseFloat(reserveMatch[1]);
+
+  const ecoSpeed = /eco[\s-]?speed|οικονομικη ταχυτητα/.test(text);
+
+  return {
+    avoid: [...avoid].filter(k=>AVOIDABLE_CHOKEPOINTS.includes(k)),
+    maxSpeedKn, minReservePct, ecoSpeed
+  };
+}
+
+function renderPolicySummary(fileName, params){
+  const parts=[];
+  if(fileName) parts.push(`<div>Αρχείο: <strong>${fileName}</strong></div>`);
+  if(params.avoid.length) parts.push(`<div style="margin-top:4px;">${params.avoid.map(k=>`<span class="tag warn">Αποφυγή: ${NODES[k].label}</span>`).join('')}</div>`);
+  if(params.maxSpeedKn!=null) parts.push(`<div class="result-sub" style="margin-top:4px;">Ανώτατη ταχύτητα πολιτικής: ${params.maxSpeedKn} kn</div>`);
+  if(params.minReservePct!=null) parts.push(`<div class="result-sub">Ελάχιστο απόθεμα καυσίμων πολιτικής: ${params.minReservePct}%</div>`);
+  if(params.ecoSpeed) parts.push(`<div class="result-sub">Εντοπίστηκε αναφορά σε eco-speed.</div>`);
+  if(!params.avoid.length && params.maxSpeedKn==null && params.minReservePct==null && !params.ecoSpeed){
+    parts.push('<div class="result-sub">Δεν εντοπίστηκαν αυτόματα συγκεκριμένες παράμετροι σε αυτό το κείμενο.</div>');
+  }
+  return parts.join('');
+}
+
+let uploadedPolicyText = null;
+let uploadedPolicyFileName = null;
+
+document.getElementById('policyFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  const summaryEl = document.getElementById('policySummary');
+  if(!file){ uploadedPolicyText=null; uploadedPolicyFileName=null; summaryEl.innerHTML=''; return; }
+  summaryEl.innerHTML = 'Ανάγνωση αρχείου…';
+  try{
+    uploadedPolicyText = await extractTextFromFile(file);
+    uploadedPolicyFileName = file.name;
+    summaryEl.innerHTML = renderPolicySummary(file.name, extractPolicyParameters(uploadedPolicyText));
+  } catch(err){
+    uploadedPolicyText = null; uploadedPolicyFileName = null;
+    summaryEl.innerHTML = `<span class="danger">Δεν ήταν δυνατή η ανάγνωση του αρχείου (${err.message||err}).</span>`;
+  }
+});
+
+// Local Greek/English keyword parser for routing-avoidance commands.
+// NOTE: an earlier version of this called the Anthropic API directly from the
+// browser to interpret the command — that only works inside Claude.ai's native
+// Artifacts preview (which proxies the request), not in a standalone/downloaded
+// HTML file like this one, where the browser has no valid API key and the
+// request is blocked. A local keyword match is actually more reliable here:
+// deterministic, instant, and needs no network or API key at all.
+const CHOKEPOINT_KEYWORDS = {
+  suez:           ["σουεζ","suez"],
+  panama:         ["παναμα","panama"],
+  gibraltar:      ["γιβραλταρ","gibraltar"],
+  malacca:        ["μαλακκα","malacca"],
+  cape_good_hope: ["καλης ελπιδας","good hope","ακρωτηρι"]
+};
+const ADEN_KEYWORDS = ["μπαμπ ελ μαντεμπ","mandeb","κολπο του αντεν","gulf of aden","αντεν","aden"];
+
+// Generic "avoid danger/piracy areas" phrasing — resolves to whichever nodes
+// are currently tagged "danger" in ROUTE_NOTES, without needing the exact name.
+const DANGER_KEYWORDS = ["κινδυν","επικινδυν","danger","risky","risk area","πειρατ","piracy","υψηλου κινδυνου","high risk","high-risk"];
+
+// "Give me a different route" phrasing — forces a reroute away from whatever
+// non-port chokepoints the previous calculation actually used.
+const ALTERNATIVE_KEYWORDS = ["αλλη διαδρομη","εναλλακτικη διαδρομη","διαφορετικη διαδρομη","αλλαξε διαδρομη","different route","alternative route","another route","change the route","change route"];
+let lastPathKeys = [];
+
+function parseRoutingCommand(commandText){
+  // strip Greek tone marks (NFD decomposition + drop combining accents) so
+  // "Σουέζ" matches "σουεζ" regardless of whether the person typed accents
+  const text = commandText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const matches = new Set();
+  const notes = [];
+
+  if(ADEN_KEYWORDS.some(w=>text.includes(w))){
+    matches.add("bab_el_mandeb");
+    matches.add("gulf_aden_mid");
+  }
+  Object.entries(CHOKEPOINT_KEYWORDS).forEach(([key,words])=>{
+    if(words.some(w=>text.includes(w))) matches.add(key);
+  });
+
+  if(DANGER_KEYWORDS.some(w=>text.includes(w))){
+    const dangerNodes = ROUTE_NOTES.filter(n=>n.tag==='danger').map(n=>n.nodeKey);
+    dangerNodes.forEach(k=>matches.add(k));
+    if(dangerNodes.length) notes.push('Ερμηνεύτηκε ως αποφυγή όλων των γνωστών περιοχών αυξημένου κινδύνου.');
+  }
+
+  if(ALTERNATIVE_KEYWORDS.some(w=>text.includes(w))){
+    const prevChokepoints = lastPathKeys.filter(k=>AVOIDABLE_CHOKEPOINTS.includes(k));
+    prevChokepoints.forEach(k=>matches.add(k));
+    if(prevChokepoints.length) notes.push('Ερμηνεύτηκε ως αίτημα για διαφορετική διαδρομή από την προηγούμενη — αποφεύγονται τα περάσματα που είχαν χρησιμοποιηθεί πριν.');
+    else notes.push('Ζητήθηκε εναλλακτική διαδρομή, αλλά η προηγούμενη δεν χρησιμοποιούσε κάποιο γνωστό πέρασμα προς αποφυγή.');
+  }
+
+  const avoid = [...matches].filter(k=>AVOIDABLE_CHOKEPOINTS.includes(k));
+  const note = notes.length ? notes.join(' ')
+    : (avoid.length
+        ? `Εντοπίστηκε αίτημα αποφυγής: ${avoid.map(k=>NODES[k].label).join(', ')}.`
+        : 'Δεν αναγνωρίστηκε κάποιο από τα γνωστά περάσματα ή είδος κινδύνου στην εντολή — υπολογίστηκε η κανονική βέλτιστη διαδρομή.');
+  return {avoid, note};
+}
+
+// Dijkstra shortest path over the sea-lane graph (weights = great-circle nm).
+// `avoid` is a list of chokepoint node keys to exclude entirely from the graph.
+function findSeaPath(fromKey, toKey, avoid=[]){
+  const avoidSet=new Set(avoid);
+  const dist={}, prev={}, visited=new Set();
+  Object.keys(NODES).forEach(k=>dist[k]=Infinity);
+  dist[fromKey]=0;
+  const adj={};
+  Object.keys(NODES).forEach(k=>adj[k]=[]);
+  EDGES.forEach(([a,b])=>{
+    if(avoidSet.has(a) || avoidSet.has(b)) return; // skip any edge touching an avoided node
+    const w=haversineNm(NODES[a],NODES[b]);
+    adj[a].push({to:b,w}); adj[b].push({to:a,w});
+  });
+  while(true){
+    let u=null, best=Infinity;
+    Object.keys(NODES).forEach(k=>{ if(!visited.has(k) && dist[k]<best){ best=dist[k]; u=k; } });
+    if(u===null || u===toKey) break;
+    visited.add(u);
+    adj[u].forEach(({to,w})=>{ if(dist[u]+w<dist[to]){ dist[to]=dist[u]+w; prev[to]=u; } });
+  }
+  if(dist[toKey]===Infinity) return null;
+  const path=[]; let cur=toKey;
+  while(cur){ path.unshift(cur); cur=prev[cur]; }
+  return path;
+}
+
+function toRad(d){return d*Math.PI/180;}
+function toDeg(r){return r*180/Math.PI;}
+
+// Great-circle (orthodromic) intermediate point via spherical interpolation, f in [0,1]
+function greatCircleInterpolate(a, b, f){
+  const φ1=toRad(a.lat), λ1=toRad(a.lon), φ2=toRad(b.lat), λ2=toRad(b.lon);
+  const δ=2*Math.asin(Math.sqrt(Math.sin((φ2-φ1)/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin((λ2-λ1)/2)**2));
+  if(δ===0) return {lat:a.lat, lon:a.lon};
+  const A=Math.sin((1-f)*δ)/Math.sin(δ), B=Math.sin(f*δ)/Math.sin(δ);
+  const x=A*Math.cos(φ1)*Math.cos(λ1)+B*Math.cos(φ2)*Math.cos(λ2);
+  const y=A*Math.cos(φ1)*Math.sin(λ1)+B*Math.cos(φ2)*Math.sin(λ2);
+  const z=A*Math.sin(φ1)+B*Math.sin(φ2);
+  return {lat:toDeg(Math.atan2(z, Math.sqrt(x*x+y*y))), lon:toDeg(Math.atan2(y,x))};
+}
+
+// Rhumb-line (loxodromic) bearing + distance between two points (constant true course)
+function rhumbBearingDistance(a,b){
+  const R=3440.065; // nm
+  const φ1=toRad(a.lat), φ2=toRad(b.lat);
+  let Δλ=toRad(b.lon-a.lon);
+  if(Math.abs(Δλ)>Math.PI) Δλ = Δλ>0 ? Δλ-2*Math.PI : Δλ+2*Math.PI;
+  const Δψ=Math.log(Math.tan(Math.PI/4+φ2/2)/Math.tan(Math.PI/4+φ1/2));
+  const q = Math.abs(Δψ)>1e-12 ? (φ2-φ1)/Δψ : Math.cos(φ1);
+  const θ=Math.atan2(Δλ, Δψ);
+  const dist=Math.sqrt((φ2-φ1)**2 + q*q*Δλ*Δλ)*R;
+  return {bearing:θ, distance:dist};
+}
+
+// Destination point given start, distance (nm) and constant rhumb-line bearing
+function rhumbDestination(a, distanceNm, bearing){
+  const R=3440.065;
+  const δ=distanceNm/R;
+  const φ1=toRad(a.lat), λ1=toRad(a.lon);
+  const Δφ=δ*Math.cos(bearing);
+  const φ2=φ1+Δφ;
+  const Δψ=Math.log(Math.tan(Math.PI/4+φ2/2)/Math.tan(Math.PI/4+φ1/2));
+  const q = Math.abs(Δψ)>1e-12 ? Δφ/Δψ : Math.cos(φ1);
+  const Δλ=δ*Math.sin(bearing)/q;
+  const λ2=λ1+Δλ;
+  return {lat:toDeg(φ2), lon:((toDeg(λ2)+540)%360)-180};
+}
+
+function rhumbLineInterpolate(a,b,f){
+  const {bearing, distance}=rhumbBearingDistance(a,b);
+  return rhumbDestination(a, distance*f, bearing);
+}
+
+function interpolatePoint(a,b,f,mode){
+  return mode==='rhumbline' ? rhumbLineInterpolate(a,b,f) : greatCircleInterpolate(a,b,f);
+}
+
+// Builds the waypoint list by first finding a safe sea path through the
+// graph (ports + chokepoints), then adding a mid-leg point on long legs
+// following the chosen course type (great circle or rhumb line) for smoothness.
+function generateWaypoints(fromKey, toKey, mode, avoid=[]){
+  const pathKeys = findSeaPath(fromKey, toKey, avoid) || [fromKey, toKey];
+  const fixed = pathKeys.map(k => ({lat:NODES[k].lat, lon:NODES[k].lon, label:NODES[k].label, key:k}));
+
+  const points=[fixed[0]];
+  for(let i=0;i<fixed.length-1;i++){
+    const a=fixed[i], b=fixed[i+1];
+    if(haversineNm(a,b) > 400){
+      const p=interpolatePoint(a,b,0.5,mode);
+      points.push({lat:+p.lat.toFixed(2), lon:+p.lon.toFixed(2), label:getOceanRegionLabel(p.lat,p.lon), key:null});
+    }
+    points.push(b);
+  }
+  return points;
+}
+
+// Finds where the ship's clocks need to change (nautical zone time) along the route
+function buildClockChanges(waypoints){
+  const changes=[];
+  let prevZone=getNauticalZone(waypoints[0].lon);
+  for(let i=1;i<waypoints.length;i++){
+    const z=getNauticalZone(waypoints[i].lon);
+    if(z!==prevZone){ changes.push({wpIndex:i, from:prevZone, to:z}); prevZone=z; }
+  }
+  return changes;
+}
+
+// Sums the sailed distance along the waypoint chain, using the appropriate
+// formula for the chosen course type (nm)
+function routeDistanceNm(waypoints, mode){
+  let total=0;
+  for(let i=0;i<waypoints.length-1;i++){
+    total += mode==='rhumbline'
+      ? rhumbBearingDistance(waypoints[i], waypoints[i+1]).distance
+      : haversineNm(waypoints[i], waypoints[i+1]);
+  }
+  return total;
+}
+
+// Checks draught/air draught against any canal the computed path passes through
+function checkCanalRestrictions(pathKeys, draught, airDraught){
+  const warnings=[];
+  Object.entries(CANALS).forEach(([key,c])=>{
+    if(pathKeys.includes(key)){
+      if(draught > c.maxDraught){
+        warnings.push({tag:"danger", text:`${c.label}: draught ${draught}m υπερβαίνει το όριο των ${c.maxDraught}m.`});
+      }
+      if(c.maxAirDraught && airDraught > c.maxAirDraught){
+        warnings.push({tag:"danger", text:`${c.label}: air draught ${airDraught}m υπερβαίνει το όριο των ${c.maxAirDraught}m (${c.note})`});
+      }
+      if(draught<=c.maxDraught && (!c.maxAirDraught || airDraught<=c.maxAirDraught)){
+        warnings.push({tag:"ok", text:`${c.label}: draught/air draught εντός ορίων.`});
+      }
+    }
+  });
+  return warnings;
+}
+
+// Route hazard/regulatory notes, matched by chokepoint node in the computed path
+// TODO: replace with live MSI/NAVTEX feeds + IMO GISIS routing measures + UKMTO piracy zone data
+const ROUTE_NOTES = [
+  { nodeKey:"bab_el_mandeb",   tag:"danger", text:"Διέλευση Κόλπου του Άντεν / Bab-el-Mandeb — περιοχή αυξημένου κινδύνου πειρατείας, σύσταση BMP5 / συνοδεία." },
+  { nodeKey:"suez",            tag:"warn",   text:"Διώρυγα Σουέζ — απαιτείται transit slot &amp; πληρωμή διοδίων, έλεγχος air draught." },
+  { nodeKey:"panama",          tag:"warn",   text:"Διώρυγα Παναμά — απαιτείται transit booking, περιορισμοί draught/beam (Panamax)." },
+  { nodeKey:"gibraltar",       tag:"warn",   text:"Στενά Γιβραλτάρ — πυκνή κίνηση, TSS σε ισχύ." },
+  { nodeKey:"malacca",         tag:"warn",   text:"Στενά Μαλάκκα — υψηλή κυκλοφορία, σύσταση ενισχυμένης βάρδιας γέφυρας." },
+  { nodeKey:"cape_good_hope",  tag:"warn",   text:"Διέλευση Ακρωτηρίου Καλής Ελπίδας — δύσκολες καιρικές συνθήκες, μεγαλύτερη διαδρομή αντί Σουέζ." }
+];
+
+// Nautical ("zone time") offset from UTC — the classic at-sea convention of
+// changing ship's clocks by 1h roughly every 15° of longitude.
+function getNauticalZone(lon){
+  return Math.round(lon/15);
+}
+function formatZone(z){
+  return z===0 ? "UTC" : (z>0 ? `UTC+${z}` : `UTC${z}`);
+}
+
+// Classic 4-satellite Inmarsat ocean-region model (still the reference used
+// for GMDSS/SafetyNET EGC coverage planning). Boundaries = midpoints between
+// the nominal satellite longitudes: AOR-W -54°, AOR-E -15.5°, IOR 64.5°, POR 178°.
+function getInmarsatRegion(lon){
+  if(lon>=-118 && lon<-34.75) return "AOR-W";
+  if(lon>=-34.75 && lon<24.5) return "AOR-E";
+  if(lon>=24.5 && lon<121.25) return "IOR";
+  return "POR"; // wraps through 180°/-180°
+}
+
+// Labels a point with the real sea/ocean it's actually in, instead of a
+// generic "intermediate point" placeholder. Checked from most specific named
+// sea to broad ocean, in order, since seas sit inside the wider ocean bands.
+function getOceanRegionLabel(lat, lon){
+  if(lat>=30 && lat<=47 && lon>=-6 && lon<=36) return "Μεσόγειος Θάλασσα";
+  if(lat>=10 && lat<=30 && lon>=32 && lon<=44) return "Ερυθρά Θάλασσα";
+  if(lat>=5 && lat<=25 && lon>=44 && lon<=63) return "Κόλπος του Άντεν / Αραβική Θάλασσα";
+  if(lat>=-5 && lat<=25 && lon>63 && lon<=78) return "Αραβική Θάλασσα";
+  if(lat>=5 && lat<=23 && lon>78 && lon<=100) return "Κόλπος της Βεγγάλης";
+  if(lat>=-10 && lat<=25 && lon>100 && lon<=125) return "Νότια Σινική Θάλασσα";
+  if(lat>=5 && lat<=23 && lon>=-100 && lon<=-60) return "Καραϊβική Θάλασσα";
+  if(lon>=-70 && lon<=20) return "Ατλαντικός Ωκεανός";
+  if(lon>20 && lon<=100) return "Ινδικός Ωκεανός";
+  return "Ειρηνικός Ωκεανός";
+}
+
+// MARPOL Annex VI Emission Control Areas (SOx/fuel sulphur limits), as simple
+// bounding boxes — a coarse approximation of the real (often coastline-hugging
+// or 200nm-buffer) boundaries, good enough to flag "you're entering/leaving
+// an ECA around here", not for exact compliance geofencing.
+const ECA_ZONES = [
+  {name:"Βαλτική Θάλασσα SECA", latMin:53, latMax:66, lonMin:9, lonMax:30},
+  {name:"Βόρεια Θάλασσα / Μάγχη SECA", latMin:48, latMax:62, lonMin:-5, lonMax:9},
+  {name:"Μεσόγειος Θάλασσα ECA (από 05/2025)", latMin:30, latMax:46, lonMin:-6, lonMax:36},
+  {name:"Βόρεια Αμερική ECA — Ανατολική ακτή", latMin:25, latMax:45, lonMin:-82, lonMax:-65},
+  {name:"Βόρεια Αμερική ECA — Κόλπος Μεξικού", latMin:18, latMax:31, lonMin:-98, lonMax:-80},
+  {name:"Βόρεια Αμερική ECA — Δυτική ακτή", latMin:32, latMax:49, lonMin:-130, lonMax:-117},
+  {name:"Καραϊβική ECA (Puerto Rico / USVI)", latMin:17, latMax:19, lonMin:-68, lonMax:-64}
+];
+
+function findECAZone(lat, lon){
+  for(const z of ECA_ZONES){
+    if(lat>=z.latMin && lat<=z.latMax && lon>=z.lonMin && lon<=z.lonMax) return z.name;
+  }
+  return null;
+}
+
+// Finds where along the route the ship crosses into/out of an ECA — these are
+// the points where MARPOL Annex VI requires a fuel changeover (to ≤0.10% S
+// fuel entering, back to the normal grade after leaving).
+function computeECACrossings(waypoints){
+  const crossings=[];
+  let prevZone = findECAZone(waypoints[0].lat, waypoints[0].lon);
+  if(prevZone) crossings.push({idx:0, entering:true, from:null, to:prevZone});
+  for(let i=1;i<waypoints.length;i++){
+    const z = findECAZone(waypoints[i].lat, waypoints[i].lon);
+    if(z !== prevZone){
+      crossings.push({idx:i, entering: !!z, from:prevZone, to:z});
+      prevZone = z;
+    }
+  }
+  return crossings;
+}
+
+// Shared renderers so the canal/ECA blocks can be rebuilt identically both at
+// the initial calculation and after live waypoint edits (drag/add/remove/undo),
+// instead of being computed once and left stale.
+function canalWarningsHtml(canalWarnings){
+  return canalWarnings.length
+    ? canalWarnings.map(w=>`<span class="tag ${w.tag}">${w.text}</span>`).join('')
+    : '<span class="result-sub">Δεν εντοπίστηκαν διώρυγες με ειδικούς περιορισμούς σε αυτή τη διαδρομή.</span>';
+}
+function ecaCrossingsHtml(ecaCrossings, waypoints){
+  return ecaCrossings.length ? ecaCrossings.map(c=>{
+    const w = waypoints[c.idx];
+    return c.entering
+      ? `<div class="result-sub" style="margin-top:4px;"><span class="tag warn">WP${c.idx} (${w.label}): είσοδος σε ${c.to} — αλλαγή σε καύσιμο ≤0.10% S πριν το σημείο</span></div>`
+      : `<div class="result-sub" style="margin-top:4px;"><span class="tag ok">WP${c.idx} (${w.label}): έξοδος από ${c.from} — δυνατότητα επιστροφής σε κανονικό καύσιμο</span></div>`;
+  }).join('') : '<div class="result-sub">Η διαδρομή δεν περνάει μέσα από γνωστή ζώνη ECA/SECA.</div>';
+}
+
+// Converts decimal lat/lon to standard nautical degrees-minutes format with N/S/E/W
+// e.g. 31.26 -> "31° 15.6' N", -79.68 -> "079° 40.8' W"
+// `precision` = decimal places on the minutes (default 1; higher when zoomed in)
+function formatCoord(lat, lon, precision){
+  precision = precision===undefined ? 1 : precision;
+  const fmt=(val, posLetter, negLetter, padDeg)=>{
+    const hemi = val>=0 ? posLetter : negLetter;
+    const abs = Math.abs(val);
+    let deg = Math.floor(abs);
+    let min = (abs-deg)*60;
+    // guard against rounding pushing minutes to 60.0
+    if(min >= 60 - 0.5/Math.pow(10,precision)){ min=0; deg+=1; }
+    const degStr = String(deg).padStart(padDeg,'0');
+    return `${degStr}° ${min.toFixed(precision)}' ${hemi}`;
+  };
+  return `${fmt(lat,'N','S',2)}  ${fmt(lon,'E','W',3)}`;
+}
+
+// D3 projection shared by the world map render and the route overlay, so
+// waypoints line up exactly with the real coastlines.
+let mapProjection = null;
+let mapReady = false;
+let pendingWaypoints = null;
+
+function initMap(){
+  mapProjection = d3.geoNaturalEarth1();
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    .then(res=>res.json())
+    .then(topology=>{
+      const world = topojson.feature(topology, topology.objects.countries);
+      mapProjection.fitSize([640,320], world);
+      const path = d3.geoPath(mapProjection);
+      const graticule = d3.geoGraticule10();
+      let svg = `<path class="graticule-path" d="${path(graticule)}" fill="none" stroke="var(--line)" stroke-width="0.4" vector-effect="non-scaling-stroke"/>`;
+      world.features.forEach(f=>{
+        svg += `<path class="country-path" d="${path(f)}" fill="var(--navy-700)" stroke="var(--navy-800)" stroke-width="0.4" vector-effect="non-scaling-stroke"/>`;
+      });
+      document.getElementById('mapLayer').innerHTML = svg;
+      mapReady = true;
+      if(pendingWaypoints){ renderRouteOnMap(pendingWaypoints); pendingWaypoints=null; }
+    })
+    .catch(()=>{
+      document.getElementById('mapLayer').innerHTML =
+        '<text x="20" y="20" class="ts" fill="var(--muted)">Ο χάρτης δεν φορτώθηκε (χρειάζεται σύνδεση internet)</text>';
+    });
+}
+initMap();
+
+// Pan/zoom on the map — mouse drag or wheel/pinch, with a very high max
+// zoom so narrow straits/chokepoints can be inspected clearly.
+let zoomBehavior = null;
+function setupMapZoom(){
+  zoomBehavior = d3.zoom()
+    .filter((event)=> !(event.target && event.target.classList && event.target.classList.contains('wp-marker-draggable')))
+    .scaleExtent([1, 80])
+    .on('zoom', (event)=>{
+      document.getElementById('zoomG').setAttribute('transform', event.transform);
+      // keep waypoint markers a constant screen size instead of ballooning with zoom
+      document.querySelectorAll('#routeLayer circle[data-base-r], #seamarksLayer circle[data-base-r]').forEach(c=>{
+        c.setAttribute('r', parseFloat(c.getAttribute('data-base-r')) / event.transform.k);
+      });
+    });
+  d3.select('#worldMap').call(zoomBehavior)
+    .on('dblclick.zoom', null); // d3-zoom's default double-click-to-zoom was conflicting with our double-click-to-add-waypoint
+}
+setupMapZoom();
+
+function resetMapZoom(){
+  if(!zoomBehavior) return;
+  d3.select('#worldMap').transition().duration(500).call(zoomBehavior.transform, d3.zoomIdentity);
+}
+
+// Jumps the map view to a specific lat/lon at high zoom — used by the 🔍
+// buttons next to each row of the detailed waypoint report.
+function zoomToPoint(lat, lon, scale){
+  if(!mapReady || !zoomBehavior) return;
+  scale = scale || 25;
+  const [x,y] = mapProjection([lon,lat]);
+  const transform = d3.zoomIdentity.translate(320 - x*scale, 160 - y*scale).scale(scale);
+  d3.select('#worldMap').transition().duration(600).call(zoomBehavior.transform, transform);
+}
+
+// Live coordinate readout under the cursor — precision (decimal places on the
+// minutes) increases the further you've zoomed in, so panning around a
+// zoomed-in strait gives noticeably finer coordinates than at world view.
+function setupCursorReadout(){
+  const svgNode = document.getElementById('worldMap');
+  svgNode.addEventListener('mousemove', (event)=>{
+    if(!mapReady) return;
+    const [mx,my] = d3.pointer(event, svgNode);
+    const t = d3.zoomTransform(svgNode);
+    const [ux,uy] = t.invert([mx,my]);
+    const [lon,lat] = mapProjection.invert([ux,uy]);
+    const precision = t.k>=20 ? 3 : (t.k>=5 ? 2 : 1);
+    const hud = document.getElementById('hudCursor');
+    if(hud) hud.textContent = `🖱 ${formatCoord(lat,lon,precision)}`;
+  });
+  svgNode.addEventListener('mouseleave', ()=>{
+    const hud = document.getElementById('hudCursor');
+    if(hud) hud.textContent = '';
+  });
+}
+setupCursorReadout();
+
+// Lets the person drag an intermediate waypoint marker directly on the map.
+// Converts the pointer position through the current zoom transform and the
+// map projection back to real lat/lon, then reuses the same recompute path
+// as manual table edits (distance, speed, fuel, map, table all update).
+let mapDragState = null;
+
+function setupMapDragging(){
+  const svgNode = document.getElementById('worldMap');
+
+  svgNode.addEventListener('pointerdown', (event)=>{
+    const target = event.target;
+    if(!target.classList || !target.classList.contains('wp-marker-draggable')) return;
+    mapDragState = {idx: parseInt(target.getAttribute('data-wp-index')), target, lat:null, lon:null};
+    target.style.cursor = 'grabbing';
+    event.preventDefault();
+  });
+
+  svgNode.addEventListener('pointermove', (event)=>{
+    if(!mapDragState) return;
+    const [mx,my] = d3.pointer(event, svgNode);
+    const t = d3.zoomTransform(svgNode);
+    const [ux,uy] = t.invert([mx,my]);
+    const [lon,lat] = mapProjection.invert([ux,uy]);
+    mapDragState.target.setAttribute('cx', ux.toFixed(1));
+    mapDragState.target.setAttribute('cy', uy.toFixed(1));
+    mapDragState.lat = lat; mapDragState.lon = lon;
+    const hud = document.getElementById('hudSelected');
+    if(hud) hud.textContent = `📍 μετακίνηση σε: ${formatCoord(lat,lon,3)}`;
+  });
+
+  function endDrag(){
+    if(!mapDragState) return;
+    const {idx, lat, lon} = mapDragState;
+    mapDragState = null;
+    if(lat!=null && lon!=null && window.lastPlan && window.lastPlan.waypoints[idx]){
+      saveUndoSnapshot(window.lastPlan);
+      window.lastPlan.waypoints[idx].lat = +lat.toFixed(3);
+      window.lastPlan.waypoints[idx].lon = +lon.toFixed(3);
+      recomputePlanAfterEdit();
+    }
+  }
+  svgNode.addEventListener('pointerup', endDrag);
+  svgNode.addEventListener('pointerleave', endDrag);
+}
+setupMapDragging();
+
+// Double-click on empty water on the map adds a new waypoint there
+document.getElementById('worldMap').addEventListener('dblclick', (event)=>{
+  if(event.target.classList && event.target.classList.contains('wp-marker-draggable')) return;
+  if(event.target.tagName==='circle') return; // clicked an existing marker (endpoint or draggable)
+  addWaypointAtMapClick(event);
+});
+
+// Right-click on an intermediate waypoint marker removes it (endpoints are
+// the actual selected ports and can't be removed this way)
+document.getElementById('worldMap').addEventListener('contextmenu', (event)=>{
+  const target = event.target;
+  if(target.classList && target.classList.contains('wp-marker-draggable')){
+    event.preventDefault();
+    removeWaypoint(parseInt(target.getAttribute('data-wp-index')));
+  }
+});
+
+
+// Shows a waypoint's exact coordinates in the HUD when its marker is clicked on the map
+function selectWaypoint(lat, lon, label){
+  const hud = document.getElementById('hudSelected');
+  if(hud) hud.textContent = `📍 ${label||'Waypoint'}: ${formatCoord(lat,lon,3)}`;
+}
+
+// Saves a one-level-deep undo snapshot before any route-changing action, so
+// the person can revert if they don't like the result (re-route, drag, add,
+// remove, coordinate edit). Only the most recent snapshot is kept.
+function saveUndoSnapshot(plan){
+  plan.undoSnapshot = {
+    waypoints: JSON.parse(JSON.stringify(plan.waypoints)),
+    effectiveAvoid: [...(plan.effectiveAvoid||[])],
+    pathKeys: [...(plan.pathKeys||[])]
+  };
+}
+
+function undoLastRouteChange(){
+  const plan = window.lastPlan;
+  const statusEl = document.getElementById('seamarksStatus');
+  if(!plan || !plan.undoSnapshot){
+    if(statusEl) statusEl.textContent = 'Δεν υπάρχει προηγούμενη διαδρομή για επαναφορά.';
+    return;
+  }
+  plan.waypoints = plan.undoSnapshot.waypoints;
+  plan.effectiveAvoid = plan.undoSnapshot.effectiveAvoid;
+  plan.pathKeys = plan.undoSnapshot.pathKeys;
+  plan.undoSnapshot = null; // single-level undo — cleared after use
+  plan.liveWeather = null; plan.depths = null; plan.seamarks = null;
+  recomputePlanAfterEdit();
+  if(statusEl) statusEl.textContent = 'Επαναφέρθηκε η προηγούμενη διαδρομή. Πάτα "Ανανέωση live δεδομένων" για καιρό/βάθος/φάρους.';
+}
+
+// Called when the person edits a waypoint's lat/lon directly in the table.
+// Updates the shared plan state, then redraws the map and recomputes
+// everything that depends on the route geometry (distance, speed, fuel).
+function updateWaypointCoord(index, field, value){
+  const plan = window.lastPlan;
+  if(!plan) return;
+  const v = parseFloat(value);
+  if(isNaN(v)) return;
+  if(field==='lat' && (v<-90 || v>90)) return;
+  if(field==='lon' && (v<-180 || v>180)) return;
+  saveUndoSnapshot(plan);
+  plan.waypoints[index][field] = v;
+  recomputePlanAfterEdit();
+}
+
+// Inserts a new waypoint right after the given index, at the midpoint of
+// that leg. Adding/removing changes the array length, so any already-fetched
+// live weather/depth/seamarks data (indexed by position) is invalidated here.
+function addWaypointAfter(idx){
+  const plan = window.lastPlan;
+  if(!plan) return;
+  const a = plan.waypoints[idx], b = plan.waypoints[idx+1];
+  if(!a || !b) return;
+  saveUndoSnapshot(plan);
+  const midLat = (a.lat+b.lat)/2, midLon = (a.lon+b.lon)/2;
+  plan.waypoints.splice(idx+1, 0, {lat:+midLat.toFixed(3), lon:+midLon.toFixed(3), label:getOceanRegionLabel(midLat,midLon), key:null});
+  plan.liveWeather = null; plan.depths = null; plan.seamarks = null;
+  recomputePlanAfterEdit();
+}
+
+// Removes an intermediate waypoint (endpoints — the actual ports — can't be removed)
+function removeWaypoint(idx){
+  const plan = window.lastPlan;
+  if(!plan) return;
+  if(idx<=0 || idx>=plan.waypoints.length-1) return;
+  saveUndoSnapshot(plan);
+  plan.waypoints.splice(idx,1);
+  plan.liveWeather = null; plan.depths = null; plan.seamarks = null;
+  recomputePlanAfterEdit();
+}
+
+// Finds which leg a newly clicked point should be inserted into — whichever
+// leg it adds the least extra distance to (closest to that segment).
+function findBestInsertionIndex(waypoints, lat, lon){
+  let bestIdx = 0, bestExtra = Infinity;
+  for(let i=0;i<waypoints.length-1;i++){
+    const a=waypoints[i], b=waypoints[i+1];
+    const direct = haversineNm(a,b);
+    const extra = haversineNm(a,{lat,lon}) + haversineNm({lat,lon},b) - direct;
+    if(extra<bestExtra){ bestExtra=extra; bestIdx=i; }
+  }
+  return bestIdx;
+}
+
+// Double-click on empty map area (not on an existing marker) adds a new
+// waypoint there, inserted into whichever leg it fits best.
+function addWaypointAtMapClick(event){
+  const plan = window.lastPlan;
+  if(!plan || !mapReady) return;
+  const svgNode = document.getElementById('worldMap');
+  const [mx,my] = d3.pointer(event, svgNode);
+  const t = d3.zoomTransform(svgNode);
+  const [ux,uy] = t.invert([mx,my]);
+  const [lon,lat] = mapProjection.invert([ux,uy]);
+  const idx = findBestInsertionIndex(plan.waypoints, lat, lon);
+  saveUndoSnapshot(plan);
+  plan.waypoints.splice(idx+1, 0, {lat:+lat.toFixed(3), lon:+lon.toFixed(3), label:getOceanRegionLabel(lat,lon), key:null});
+  plan.liveWeather = null; plan.depths = null; plan.seamarks = null;
+  recomputePlanAfterEdit();
+}
+
+function recomputePlanAfterEdit(){
+  const plan = window.lastPlan;
+  if(!plan) return;
+
+  plan.distanceNm = routeDistanceNm(plan.waypoints, plan.routingMode);
+  plan.requiredSpeed = plan.distanceNm / plan.hoursAvailable;
+  const speedRatio = plan.requiredSpeed / plan.profile.serviceSpeed;
+  const loadFactor = plan.loadState==='laden' ? 1.12 : 1.0;
+  plan.estFuel = plan.profile.dailyFuelAtService * Math.pow(speedRatio,3) * loadFactor * plan.days;
+  plan.remainingFuel = plan.fuelAvailable - plan.estFuel;
+  plan.minReserve = plan.policyParams && plan.policyParams.minReservePct!=null
+    ? plan.estFuel * (plan.policyParams.minReservePct/100)
+    : Math.max(plan.estFuel*0.10, plan.profile.dailyFuelAtService);
+
+  renderRouteOnMap(plan.waypoints);
+
+  const speedWarn = plan.requiredSpeed > plan.profile.serviceSpeed*1.15;
+  const fuelWarn = plan.estFuel > plan.fuelAvailable;
+  const reserveWarn = !fuelWarn && plan.remainingFuel < plan.minReserve;
+
+  const set = (id, html)=>{ const el=document.getElementById(id); if(el) el.innerHTML = html; };
+  set('estFuelValue', plan.estFuel.toFixed(1)+' MT');
+  set('fuelSubText', `για ${plan.distanceNm.toFixed(0)} nm στα ${plan.requiredSpeed.toFixed(1)} kn (${plan.days.toFixed(1)} ημέρες πλεύσης)`);
+  set('routeDistanceText', `${plan.distanceNm.toFixed(0)} nm συνολικά (ενημερώθηκε) · ${plan.waypoints.length} waypoints`);
+  const speedValEl = document.getElementById('requiredSpeedValue');
+  if(speedValEl){ speedValEl.textContent = plan.requiredSpeed.toFixed(1)+' kn'; speedValEl.classList.toggle('danger', speedWarn); }
+  set('speedSubText', `Service speed ${plan.profile.label}: ~${plan.profile.serviceSpeed} kn ${speedWarn?'<span class="tag danger">Μη εφικτό στο service speed</span>':''}`);
+  set('fuelWarnText', fuelWarn ? '<span class="tag danger">Ανεπαρκή καύσιμα για το ταξίδι</span>' : '');
+  set('remainingFuelText', !fuelWarn ? `Υπόλοιπο μετά το ταξίδι: <strong>${plan.remainingFuel.toFixed(1)} MT</strong> ${reserveWarn ? '<span class="tag warn">Κάτω από ελάχιστο απόθεμα ασφαλείας ('+plan.minReserve.toFixed(1)+' MT)</span>' : '<span class="tag ok">Πάνω από ελάχιστο απόθεμα ασφαλείας</span>'}` : '');
+
+  const tbody = document.querySelector('#detailedTable tbody');
+  if(tbody) tbody.innerHTML = detailedRowsHtml(plan.waypoints, plan.liveWeather, plan.depths, plan.draught, plan.seamarks);
+
+  // Canal restrictions and ECA/SECA crossings depend entirely on the route
+  // geometry, so they must be recomputed here too — otherwise they'd stay
+  // frozen at whatever the route looked like at the initial calculation,
+  // and the PDF (which reads this same plan state) would inherit the stale data.
+  plan.canalWarnings = checkCanalRestrictions(plan.waypoints.filter(w=>w.key).map(w=>w.key), plan.draught, plan.airDraught);
+  plan.ecaCrossings = computeECACrossings(plan.waypoints);
+  const canalContentEl = document.getElementById('canalWarningsContent');
+  if(canalContentEl) canalContentEl.innerHTML = canalWarningsHtml(plan.canalWarnings);
+  const ecaContentEl = document.getElementById('ecaContent');
+  if(ecaContentEl) ecaContentEl.innerHTML = ecaCrossingsHtml(plan.ecaCrossings, plan.waypoints);
+
+  const seamarksStatusEl = document.getElementById('seamarksStatus');
+  if(seamarksStatusEl) seamarksStatusEl.textContent = 'Οι συντεταγμένες άλλαξαν — ο καιρός/βάθος/φάροι στον πίνακα είναι από τα ΠΑΛΙΑ σημεία. Πάτα "Ανανέωση live δεδομένων" παρακάτω.';
+}
+
+// Re-fetches weather/depth/seamarks for the current (possibly edited) waypoints
+function refreshLiveDataAfterEdit(){
+  const plan = window.lastPlan;
+  if(!plan) return;
+  const seamarksStatusEl = document.getElementById('seamarksStatus');
+  if(seamarksStatusEl) seamarksStatusEl.textContent = '';
+  updateLiveWeather(plan.waypoints, plan.draught);
+}
+
+// Weather-avoidance re-routing: checks live weather at the route's NAMED
+// chokepoints/hubs (not the open-ocean interpolated points — those aren't
+// safely excludable from the graph without risking disconnection) and, if
+// any exceed rough-weather thresholds, excludes them and recomputes the
+// path — same mechanism as manually asking to avoid a passage, just driven
+// by live conditions instead of a typed command. This is a coarse
+// approximation of real weather routing (which needs a continuous grid/
+// isochrone model, like StormGeo/DTN do) — not true optimal-track routing.
+const WEATHER_AVOID_WAVE_M = 3.5;   // moderate-rough sea state
+const WEATHER_AVOID_WIND_KN = 34;   // ~gale force (Beaufort 8)
+
+function avoidWeatherHazards(){
+  const plan = window.lastPlan;
+  const statusEl = document.getElementById('seamarksStatus');
+  if(!plan) return;
+  if(!plan.liveWeather){
+    if(statusEl) statusEl.textContent = 'Χρειάζεται πρώτα να φορτώσουν τα live δεδομένα καιρού — πάτα "Ανανέωση live δεδομένων".';
+    return;
+  }
+
+  const waveInput = document.getElementById('weatherAvoidWaveInput');
+  const windInput = document.getElementById('weatherAvoidWindInput');
+  const waveThreshold = (waveInput && parseFloat(waveInput.value)>0) ? parseFloat(waveInput.value) : WEATHER_AVOID_WAVE_M;
+  const windThreshold = (windInput && parseFloat(windInput.value)>0) ? parseFloat(windInput.value) : WEATHER_AVOID_WIND_KN;
+
+  const badKeys = new Set();
+  plan.waypoints.forEach((w,i)=>{
+    if(!w.key || !AVOIDABLE_CHOKEPOINTS.includes(w.key)) return; // only chokepoints can be safely excluded
+    const wx = plan.liveWeather[i];
+    if(wx && ((wx.wave!=null && wx.wave>=waveThreshold) || (wx.windKn!=null && wx.windKn>=windThreshold))){
+      badKeys.add(w.key);
+    }
+  });
+
+  if(!badKeys.size){
+    if(statusEl) statusEl.textContent = `Δεν εντοπίστηκε επικίνδυνος καιρός (κύμα ≥${waveThreshold}m ή άνεμος ≥${windThreshold}kn) σε κάποιο αποφεύξιμο πέρασμα της τρέχουσας διαδρομής.`;
+    return;
+  }
+
+  const newAvoid = [...new Set([...(plan.effectiveAvoid||[]), ...badKeys])];
+  const testPath = findSeaPath(plan.fromKey, plan.toKey, newAvoid);
+  if(!testPath){
+    if(statusEl) statusEl.textContent = 'Δεν υπάρχει ασφαλής εναλλακτική διαδρομή αν αποφευχθούν όλα τα σημεία με κακοκαιρία μαζί — κρατήθηκε η τρέχουσα διαδρομή.';
+    return;
+  }
+
+  saveUndoSnapshot(plan);
+  plan.effectiveAvoid = newAvoid;
+  plan.pathKeys = testPath;
+  plan.waypoints = generateWaypoints(plan.fromKey, plan.toKey, plan.routingMode, newAvoid);
+  plan.liveWeather = null; plan.depths = null; plan.seamarks = null;
+  recomputePlanAfterEdit();
+  if(statusEl) statusEl.textContent = `Νέα διαδρομή, αποφεύγοντας κακοκαιρία σε: ${[...badKeys].map(k=>NODES[k].label).join(', ')}. Φόρτωση νέων live δεδομένων…`;
+  refreshLiveDataAfterEdit();
+}
+
+function renderRouteOnMap(waypoints){
+  if(!mapReady){ pendingWaypoints=waypoints; return; }
+  const layer=document.getElementById('routeLayer');
+  const pts = waypoints.map(w=>{
+    const [x,y]=mapProjection([w.lon,w.lat]);
+    return {x,y};
+  });
+
+  // If two consecutive waypoints' raw longitudes differ by more than 180°,
+  // the true shortest path crosses the antimeridian (180°/-180°) — a straight
+  // pixel-space line between them would incorrectly cut across the whole map.
+  // Lift the pen for that segment instead of drawing a false line.
+  let pathD = '';
+  pts.forEach((p,i)=>{
+    const crossesDateline = i>0 && Math.abs(waypoints[i].lon - waypoints[i-1].lon) > 180;
+    pathD += (i===0 || crossesDateline ? 'M' : 'L') + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + ' ';
+  });
+  let svg = `<path d="${pathD.trim()}" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>`;
+  const currentScale = d3.zoomTransform(document.getElementById('worldMap')).k;
+  pts.forEach((p,i)=>{
+    const isEnd = i===0 || i===pts.length-1;
+    const baseR = isEnd?4:3;
+    const w = waypoints[i];
+    const labelEsc = (w.label||'Waypoint').replace(/'/g,"\\'");
+    const draggable = !isEnd;
+    svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${(baseR/currentScale).toFixed(3)}" data-base-r="${baseR}" data-wp-index="${i}" class="${draggable?'wp-marker-draggable':''}" fill="${isEnd?'var(--amber)':'var(--teal)'}" stroke="var(--navy-950)" stroke-width="1" vector-effect="non-scaling-stroke" style="cursor:${draggable?'grab':'pointer'};" onclick="selectWaypoint(${w.lat},${w.lon},'${labelEsc}')"/>`;
+  });
+  layer.innerHTML = svg;
+}
+
+function haversineNm(a,b){
+  const R=3440.065; // nm
+  const toRad=d=>d*Math.PI/180;
+  const dLat=toRad(b.lat-a.lat), dLon=toRad(b.lon-a.lon);
+  const la1=toRad(a.lat), la2=toRad(b.lat);
+  const h=Math.sin(dLat/2)**2 + Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(h), Math.sqrt(1-h));
+}
+
+function populateSelects(){
+  const from=document.getElementById('portFrom'), to=document.getElementById('portTo');
+  Object.entries(PORTS).forEach(([key,p])=>{
+    from.add(new Option(p.label,key));
+    to.add(new Option(p.label,key));
+  });
+  to.selectedIndex=2; // just so from != to by default
+}
+populateSelects();
+
+async function calculatePlan(){
+  const fromKey=document.getElementById('portFrom').value;
+  const toKey=document.getElementById('portTo').value;
+  const depVal=document.getElementById('depTime').value;
+  const arrVal=document.getElementById('arrTime').value;
+  const resultsEl=document.getElementById('results');
+
+  if(fromKey===toKey){
+    resultsEl.innerHTML = '<p class="placeholder danger">Το λιμάνι αναχώρησης και άφιξης δεν μπορούν να είναι ίδια.</p>';
+    return;
+  }
+  if(!depVal || !arrVal){
+    resultsEl.innerHTML = '<p class="placeholder danger">Συμπλήρωσε ημερομηνία/ώρα αναχώρησης και επιθυμητής άφιξης.</p>';
+    return;
+  }
+
+  const dep=new Date(depVal), arr=new Date(arrVal);
+  const hoursAvailable=(arr-dep)/3600000;
+  if(hoursAvailable<=0){
+    resultsEl.innerHTML = '<p class="placeholder danger">Η ώρα άφιξης πρέπει να είναι μετά την αναχώρηση.</p>';
+    return;
+  }
+
+  const commandText = document.getElementById('routingCommand').value.trim();
+  let commandResult = {avoid:[], note:''};
+  if(commandText){
+    resultsEl.innerHTML = '<p class="placeholder">Ερμηνεία εντολής δρομολόγησης…</p>';
+    commandResult = await parseRoutingCommand(commandText);
+  }
+
+  const manualPolicyText = document.getElementById('policy').value.trim();
+  const policySourceText = uploadedPolicyText || manualPolicyText;
+  const policyParams = policySourceText
+    ? extractPolicyParameters(policySourceText)
+    : {avoid:[], maxSpeedKn:null, minReservePct:null, ecoSpeed:false};
+  const combinedAvoid = [...new Set([...(commandResult.avoid||[]), ...(policyParams.avoid||[])])];
+
+  const from=PORTS[fromKey], to=PORTS[toKey];
+  const routingMode=document.getElementById('routingMode').value;
+
+  // Safety fallback: if avoiding everything requested leaves no possible sea
+  // path (fully disconnected graph), drop the avoid-list rather than silently
+  // falling back to a straight line that could cut across land.
+  let effectiveAvoid = combinedAvoid;
+  let avoidCouldNotApply = false;
+  if(combinedAvoid.length && !findSeaPath(fromKey, toKey, combinedAvoid)){
+    effectiveAvoid = [];
+    avoidCouldNotApply = true;
+  }
+
+  const pathKeys = findSeaPath(fromKey, toKey, effectiveAvoid) || [fromKey, toKey];
+  const waypoints = generateWaypoints(fromKey, toKey, routingMode, effectiveAvoid);
+  lastPathKeys = pathKeys;
+  renderRouteOnMap(waypoints);
+  const distanceNm = routeDistanceNm(waypoints, routingMode);
+
+  const requiredSpeed = distanceNm / hoursAvailable;
+
+  const shipType=document.getElementById('shipType').value;
+  const profile=SHIP_PROFILES[shipType];
+  const loadState=document.getElementById('loadState').value;
+  const loadFactor = loadState==='laden' ? 1.12 : 1.0; // laden καταναλώνει λίγο παραπάνω
+
+  // Fuel: cubic law σε σχέση με service speed
+  const speedRatio = requiredSpeed / profile.serviceSpeed;
+  const days = hoursAvailable/24;
+  const estFuel = profile.dailyFuelAtService * Math.pow(speedRatio,3) * loadFactor * days;
+
+  const fuelAvailable=parseFloat(document.getElementById('fuel').value)||0;
+  const airDraught=parseFloat(document.getElementById('airDraught').value)||0;
+
+  // TODO: real hazard/security data (piracy, MSI/NAVTEX) has no simple free live
+  // API — see the note below the form for the realistic production options.
+
+  const canalWarnings = checkCanalRestrictions(waypoints.filter(w=>w.key).map(w=>w.key), getMeanDraught(), airDraught);
+
+  // Ελάχιστο απόθεμα καυσίμων ασφαλείας: από την πολιτική εταιρίας αν εντοπίστηκε
+  // ποσοστό στο αρχείο/κείμενο, αλλιώς προεπιλογή 10% της κατανάλωσης (ή 1 ημέρα, όποιο μεγαλύτερο)
+  const minReserve = policyParams.minReservePct!=null
+    ? estFuel * (policyParams.minReservePct/100)
+    : Math.max(estFuel*0.10, profile.dailyFuelAtService);
+  const remainingFuel = fuelAvailable - estFuel;
+  const policySpeedWarn = policyParams.maxSpeedKn!=null && requiredSpeed > policyParams.maxSpeedKn;
+
+  let html = '';
+
+  if(commandText){
+    html += `<div class="result-block">
+      <div class="result-label">Εντολή δρομολόγησης</div>
+      <div class="result-sub">"${commandText}"</div>
+      ${commandResult.error ? '<div class="result-sub danger" style="margin-top:6px;">Η εντολή δεν ερμηνεύτηκε (πρόβλημα σύνδεσης με το AI) — υπολογίστηκε η κανονική βέλτιστη διαδρομή.</div>' : ''}
+      ${commandResult.avoid && commandResult.avoid.length ? `<div style="margin-top:6px;">${commandResult.avoid.map(k=>`<span class="tag warn">Αποφυγή: ${NODES[k].label}</span>`).join('')}</div>` : ''}
+      ${commandResult.note ? `<div class="result-sub" style="margin-top:6px;">${commandResult.note}</div>` : ''}
+      ${avoidCouldNotApply ? '<div class="result-sub danger" style="margin-top:6px;">Δεν υπάρχει καμία ασφαλής θαλάσσια διαδρομή αν αποφευχθούν όλα τα ζητούμενα περάσματα μαζί — υπολογίστηκε η κανονική διαδρομή αντ\' αυτού.</div>' : ''}
+    </div>`;
+  }
+
+  html += `<div class="result-block" style="background:var(--navy-800); border-radius:8px; padding:14px 16px; border-bottom:none;">
+    <div class="result-label">Καύσιμα που θα χρειαστείς</div>
+    <div class="result-value" id="estFuelValue" style="font-size:30px;">${estFuel.toFixed(1)} MT</div>
+    <div class="result-sub" id="fuelSubText">για ${distanceNm.toFixed(0)} nm στα ${requiredSpeed.toFixed(1)} kn (${days.toFixed(1)} ημέρες πλεύσης)</div>
+  </div>`;
+
+  html += `<div class="result-block">
+    <div class="result-label">Διαδρομή (${profile.label})</div>
+    <div class="result-value">${from.label} → ${to.label}</div>
+    <div class="result-sub" id="routeDistanceText">${distanceNm.toFixed(0)} nm συνολικά · ${waypoints.length} waypoints</div>
+  </div>`;
+
+  const speedWarn = requiredSpeed > profile.serviceSpeed*1.15;
+  html += `<div class="result-block">
+    <div class="result-label">Απαιτούμενη μέση ταχύτητα</div>
+    <div class="result-value ${speedWarn||policySpeedWarn?'danger':''}" id="requiredSpeedValue">${requiredSpeed.toFixed(1)} kn</div>
+    <div class="result-sub" id="speedSubText">Service speed ${profile.label}: ~${profile.serviceSpeed} kn ${speedWarn?'<span class="tag danger">Μη εφικτό στο service speed</span>':''}</div>
+    ${policySpeedWarn ? `<div class="result-sub" style="margin-top:4px;"><span class="tag warn">Υπερβαίνει το όριο πολιτικής εταιρίας (${policyParams.maxSpeedKn} kn)</span></div>` : ''}
+  </div>`;
+
+  const fuelWarn = estFuel > fuelAvailable;
+  const reserveWarn = !fuelWarn && remainingFuel < minReserve;
+  html += `<div class="result-block">
+    <div class="result-label">Διαθέσιμα / υπόλοιπο καυσίμων</div>
+    <div class="result-value ${fuelWarn?'danger':''}">${fuelAvailable} MT διαθέσιμα</div>
+    <div class="result-sub" id="fuelWarnText">${fuelWarn?'<span class="tag danger">Ανεπαρκή καύσιμα για το ταξίδι</span>':''}</div>
+    <div class="result-sub" id="remainingFuelText" style="margin-top:6px;">${!fuelWarn ? `Υπόλοιπο μετά το ταξίδι: <strong>${remainingFuel.toFixed(1)} MT</strong>
+      ${reserveWarn ? '<span class="tag warn">Κάτω από ελάχιστο απόθεμα ασφαλείας ('+minReserve.toFixed(1)+' MT)</span>' : '<span class="tag ok">Πάνω από ελάχιστο απόθεμα ασφαλείας</span>'}` : ''}</div>
+  </div>`;
+
+  html += `<div class="result-block">
+    <div class="result-label">Έλεγχος διωρύγων / γεφυρών</div>
+    <div id="canalWarningsContent">${canalWarningsHtml(canalWarnings)}</div>
+  </div>`;
+
+  const ecaCrossings = computeECACrossings(waypoints);
+  html += `<div class="result-block">
+    <div class="result-label">Αλλαγή καυσίμου — ECA/SECA (MARPOL Annex VI)</div>
+    <div id="ecaContent">${ecaCrossingsHtml(ecaCrossings, waypoints)}</div>
+    <div class="result-sub" style="margin-top:6px;">Σχηματικά όρια ζωνών (όχι ακριβή γεωγραφικά περιγράμματα) — επιβεβαίωση από επίσημη πηγή πριν το ταξίδι.</div>
+  </div>`;
+
+  html += `<div class="result-block">
+    <div class="result-label">Καιρός στη διαδρομή</div>
+    <div id="weatherBlock"><div class="result-sub">Φόρτωση live δεδομένων καιρού…</div></div>
+  </div>`;
+
+  const clockChanges = buildClockChanges(waypoints);
+  html += `<div class="result-block">
+    <div class="result-label">Αλλαγές ώρας ρολογιού πλοίου</div>
+    ${clockChanges.length
+      ? clockChanges.map(c=>{const d=c.to-c.from; return `<div class="result-sub">Στο WP${c.wpIndex}: ${d>0?'+':''}${d}h → ρολόγια σε ${formatZone(c.to)}</div>`;}).join('')
+      : '<div class="result-sub">Καμία αλλαγή ζώνης ώρας σε αυτή τη διαδρομή.</div>'}
+  </div>`;
+
+  html += `<div class="result-block">
+    <div class="result-label">Αναλυτική αναφορά διαδρομής</div>
+    <div class="result-sub" style="margin-bottom:6px;">Ζώνη ώρας, Inmarsat, βάθος θαλάσσης, φάροι/TSS (OpenSeaMap), ρεύμα και καιρός (live) ανά σημείο. Οι συντεταγμένες (lat/lon) είναι επεξεργάσιμες — αλλάζοντάς τες ενημερώνονται αυτόματα ο χάρτης, η απόσταση, η ταχύτητα και τα καύσιμα.</div>
+    <div id="seamarksStatus" class="result-sub danger" style="margin-bottom:6px;"></div>
+    <div style="overflow-x:auto;">
+    <table id="detailedTable" style="width:100%; font-family:var(--mono); font-size:11px; border-collapse:collapse; min-width:880px;">
+      <thead><tr style="color:var(--muted); text-align:left;">
+        <th style="padding:4px 6px 4px 0;">WP</th><th style="padding:4px 6px;">Lat / Lon (επεξεργάσιμο)</th><th style="padding:4px 6px;">Σημείο</th>
+        <th style="padding:4px 6px;">Ζώνη</th><th style="padding:4px 6px;">Inmarsat</th><th style="padding:4px 6px;">Βάθος</th>
+        <th style="padding:4px 6px;">Φάροι/TSS</th><th style="padding:4px 6px;">Ρεύμα</th><th style="padding:4px 6px;">Κύμα/Άνεμος</th><th style="padding:4px 0;">Κίνδυνος</th>
+      </tr></thead>
+      <tbody>${detailedRowsHtml(waypoints, null, null, getMeanDraught(), null)}</tbody>
+    </table>
+    </div>
+    <button onclick="refreshLiveDataAfterEdit()" style="width:auto; margin-top:10px; padding:6px 12px; font-size:12px;">Ανανέωση live δεδομένων (καιρός/βάθος/φάροι)</button>
+    <div style="margin-top:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <button onclick="avoidWeatherHazards()" style="width:auto; margin:0; padding:6px 12px; font-size:12px;">🌊 Απόφυγε κακοκαιρία (re-route)</button>
+      <label style="font-size:11px; color:var(--muted); display:flex; align-items:center; gap:4px;">όριο κύμα ≥
+        <input type="number" id="weatherAvoidWaveInput" value="3.5" step="0.5" min="0.5" style="width:55px; padding:2px 4px; font-size:11px;"> m
+      </label>
+      <label style="font-size:11px; color:var(--muted); display:flex; align-items:center; gap:4px;">ή άνεμος ≥
+        <input type="number" id="weatherAvoidWindInput" value="34" step="1" min="1" style="width:55px; padding:2px 4px; font-size:11px;"> kn
+      </label>
+      <button onclick="undoLastRouteChange()" style="width:auto; margin:0; padding:6px 12px; font-size:12px;">↩️ Επαναφορά προηγούμενης διαδρομής</button>
+    </div>
+  </div>`;
+
+  html += `<div class="result-block">
+    <div class="result-label">Εκτιμώμενη άφιξη (ETA)</div>
+    <div class="result-value">${arr.toLocaleString('el-GR')}</div>
+    <div class="result-sub">Διάρκεια ταξιδιού: ${days.toFixed(1)} ημέρες</div>
+  </div>`;
+
+  if(policySourceText){
+    html += `<div class="result-block">
+      <div class="result-label">Πολιτική εταιρίας${uploadedPolicyFileName?' (από αρχείο)':''}</div>
+      ${renderPolicySummary(uploadedPolicyFileName, policyParams)}
+    </div>`;
+  }
+
+  html += `<div class="result-block" style="border-bottom:none;">
+    <div class="result-sub" style="margin-bottom:6px;">Δημιουργία PDF σε γλώσσα / Generate PDF in:</div>
+    <button onclick="generatePdfReport('el')" style="width:auto; margin-right:8px;">📄 PDF (Ελληνικά)</button>
+    <button onclick="generatePdfReport('en')" style="width:auto;">📄 PDF (English)</button>
+    <div id="pdfStatus" class="result-sub" style="margin-top:6px;"></div>
+  </div>`;
+
+  window.lastPlan = {
+    fromKey, toKey, from, to, dep, arr, days, hoursAvailable, distanceNm, requiredSpeed, routingMode,
+    profile, loadState, estFuel, fuelAvailable, remainingFuel, minReserve,
+    draught: getMeanDraught(), trim: getTrim(), airDraught,
+    vesselName: document.getElementById('vesselName').value.trim(), imoNo: document.getElementById('imoNo').value.trim(),
+    voyageNo: document.getElementById('voyageNo').value.trim(), cargoQty: parseFloat(document.getElementById('cargoQty').value)||null,
+    waypoints, pathKeys, canalWarnings, ecaCrossings, policyParams, policySourceText, uploadedPolicyFileName,
+    commandText, commandResult, effectiveAvoid, avoidCouldNotApply,
+    liveWeather: null, depths: null, seamarks: null, undoSnapshot: null
+  };
+
+  resultsEl.innerHTML = html;
+  updateLiveWeather(waypoints, getMeanDraught());
+}
+
+// Builds table rows combining position, nautical time zone, Inmarsat ocean
+// region, sea depth, current, per-point weather (if already fetched) and any
+// hazard note for that point. `draught` (m) is used to flag shallow water.
+function detailedRowsHtml(waypoints, weatherArr, depthArr, draught, seamarksArr){
+  return waypoints.map((w,i)=>{
+    const zone=getNauticalZone(w.lon);
+    const region=getInmarsatRegion(w.lon);
+    const note=ROUTE_NOTES.find(n=>n.nodeKey===w.key);
+    const wx=weatherArr && weatherArr[i];
+    const wxText = !weatherArr ? '…' : (wx && wx.wave!=null ? `${wx.wave.toFixed(1)}m / ${wx.windKn.toFixed(0)}kn` : '—');
+    const curText = !weatherArr ? '…' : (wx && wx.currentKn!=null ? `${wx.currentKn.toFixed(1)}kn → ${Math.round(wx.currentDir)}°` : '—');
+    const depth = depthArr ? depthArr[i] : undefined;
+    const shallow = depth!=null && draught!=null && depth < draught*1.1; // <10% UKC margin
+    const depthText = depthArr===null ? '…' : (depth!=null ? `${depth.toFixed(0)}m${shallow?' <span class="tag danger">ρηχά</span>':''}` : '—');
+    const sm = seamarksArr ? seamarksArr[i] : undefined;
+    const smText = !seamarksArr ? '…' : (sm && sm.lights!=null
+      ? `${sm.lights.length} φάρ${sm.lights.length===1?'ος':'οι'}${sm.tss && sm.tss.length ? ' · TSS' : ''}`
+      : '—');
+    const isEndpoint = i===0 || i===waypoints.length-1;
+    const isLast = i===waypoints.length-1;
+    return `<tr style="border-top:1px dashed var(--line);">
+      <td style="padding:4px 6px 4px 0; color:var(--muted); white-space:nowrap;">WP${i}
+        <span style="cursor:pointer;" onclick="zoomToPoint(${w.lat},${w.lon})" title="Zoom στο σημείο">🔍</span>
+        ${!isLast ? `<span style="cursor:pointer;" onclick="addWaypointAfter(${i})" title="Προσθήκη waypoint μετά">➕</span>` : ''}
+        ${!isEndpoint ? `<span style="cursor:pointer;" onclick="removeWaypoint(${i})" title="Διαγραφή waypoint">🗑</span>` : ''}
+      </td>
+      <td style="padding:4px 6px; white-space:nowrap;">
+        <input type="number" step="0.01" value="${w.lat}" style="width:60px; padding:2px 4px; font-family:var(--mono); font-size:10px;" onchange="updateWaypointCoord(${i},'lat',this.value)" title="Latitude (decimal)">
+        <input type="number" step="0.01" value="${w.lon}" style="width:60px; padding:2px 4px; font-family:var(--mono); font-size:10px;" onchange="updateWaypointCoord(${i},'lon',this.value)" title="Longitude (decimal)">
+      </td>
+      <td style="padding:4px 6px; color:var(--muted);">${w.label}</td>
+      <td style="padding:4px 6px; white-space:nowrap;">${formatZone(zone)}</td>
+      <td style="padding:4px 6px;">${region}</td>
+      <td style="padding:4px 6px; white-space:nowrap;">${depthText}</td>
+      <td style="padding:4px 6px; white-space:nowrap;">${smText}</td>
+      <td style="padding:4px 6px; white-space:nowrap;">${curText}</td>
+      <td style="padding:4px 6px; white-space:nowrap;">${wxText}</td>
+      <td style="padding:4px 0;">${note?`<span class="tag ${note.tag}">${note.text}</span>`:''}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Live weather via Open-Meteo (free, no API key, CORS-enabled).
+// TODO: for production-grade marine routing swap this for DTN / StormGeo,
+// which offer proper per-leg routing forecasts, not just point samples.
+async function fetchLiveWeatherPoint(lat, lon){
+  try{
+    const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&hourly=wave_height,ocean_current_velocity,ocean_current_direction&forecast_days=3&timezone=auto`;
+    const windUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=wind_speed_10m&forecast_days=3&timezone=auto`;
+    const [marineRes, windRes] = await Promise.all([fetch(marineUrl), fetch(windUrl)]);
+    const marine = await marineRes.json();
+    const wind = await windRes.json();
+    const wave = marine?.hourly?.wave_height?.find(v=>v!=null);
+    const currentKmh = marine?.hourly?.ocean_current_velocity?.find(v=>v!=null);
+    const currentDir = marine?.hourly?.ocean_current_direction?.find(v=>v!=null);
+    const windSpeedKmh = wind?.hourly?.wind_speed_10m?.find(v=>v!=null);
+    return {
+      wave: wave!=null ? wave : null,
+      windKn: windSpeedKmh!=null ? (windSpeedKmh/1.852) : null,  // km/h -> kn
+      currentKn: currentKmh!=null ? (currentKmh/1.852) : null,    // km/h -> kn
+      currentDir: currentDir!=null ? currentDir : null            // degrees, direction current flows toward
+    };
+  } catch(err){
+    // One failed point must NOT take down the whole route's weather/depth/
+    // lighthouse fetch (they're combined in one Promise.all upstream) — this
+    // was the actual cause of the PDF showing everything empty.
+    return {wave:null, windKn:null, currentKn:null, currentDir:null};
+  }
+}
+
+// Batched sea-depth lookup via the free Open Topo Data public API (GEBCO
+// bathymetry grid). One request covers every waypoint (locations are '|'-joined).
+// GEBCO elevation is negative below sea level, so depth = -elevation.
+async function fetchBathymetryBatch(waypoints){
+  try{
+    const locs = waypoints.map(w=>`${w.lat},${w.lon}`).join('|');
+    const res = await fetch(`https://api.opentopodata.org/v1/gebco2020?locations=${locs}`);
+    if(!res.ok){
+      const bodyText = await res.text().catch(()=> '');
+      return {depths: waypoints.map(()=>null), error: `HTTP ${res.status}${bodyText?': '+bodyText.slice(0,150):''}`};
+    }
+    const data = await res.json();
+    if(!Array.isArray(data.results) || data.results.length !== waypoints.length){
+      return {depths: waypoints.map(()=>null), error: `Unexpected response (status="${data.status||'?'}", ${Array.isArray(data.results)?data.results.length:0}/${waypoints.length} results)`};
+    }
+    return {depths: data.results.map(r => r.elevation!=null ? -r.elevation : null), error:null};
+  } catch(err){
+    return {depths: waypoints.map(()=>null), error: (err && err.message) ? err.message : String(err)};
+  }
+}
+
+// Looks up nearby lighthouses and traffic separation scheme (TSS) zones from
+// OpenSeaMap (crowd-sourced nautical layer on top of OpenStreetMap), via the
+// free Overpass API — no key needed. Searches a ~11nm (20km) radius around
+// each waypoint. NOTE: crowd-sourced data, not an official ENC — reference only.
+//
+// Sends ONE combined request for all waypoints, not one per point (the public
+// Overpass server rate-limits many simultaneous requests from the same
+// client). Tries a couple of public mirrors, since the main instance is
+// sometimes overloaded/slow, and surfaces the real error instead of hiding it.
+const OVERPASS_MIRRORS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter'
+];
+
+async function fetchSeamarksBatch(waypoints){
+  // Only search around NAMED nodes (real ports/chokepoints, w.key is set) —
+  // the interpolated open-ocean points (no key) are far from any coast by
+  // construction, so querying them too just makes the request heavier for
+  // no real benefit. This alone roughly halves typical query size.
+  const namedWaypoints = waypoints.filter(w=>w.key);
+  const queryPoints = namedWaypoints.length ? namedWaypoints : waypoints;
+
+  const clauses = queryPoints.map(w=>
+    `node(around:15000,${w.lat},${w.lon})["seamark:type"~"^(light_major|light_minor|light)$"];`+
+    `way(around:15000,${w.lat},${w.lon})["seamark:type"~"^(separation_zone|separation_lane|separation_line|separation_boundary)$"];`
+  ).join('');
+  const query = `[out:json][timeout:20];(${clauses});out center;`;
+
+  let lastError = null;
+  for(const endpoint of OVERPASS_MIRRORS){
+    try{
+      const controller = new AbortController();
+      const timer = setTimeout(()=>controller.abort(), 12000); // fail fast instead of waiting out a slow/504 mirror
+      let res;
+      try{
+        res = await fetch(endpoint, {method:'POST', body: query, signal: controller.signal});
+      } finally {
+        clearTimeout(timer);
+      }
+      if(!res.ok){ lastError = `HTTP ${res.status} από ${endpoint}`; continue; }
+      const data = await res.json();
+      const lights=[], tss=[];
+      (data.elements||[]).forEach(e=>{
+        const t = e.tags && e.tags['seamark:type'];
+        const lat2 = e.lat!=null ? e.lat : (e.center ? e.center.lat : null);
+        const lon2 = e.lon!=null ? e.lon : (e.center ? e.center.lon : null);
+        if(lat2==null || lon2==null) return;
+        if(/^(light_major|light_minor|light)$/.test(t)) lights.push({lat:lat2, lon:lon2});
+        else if(/^(separation_zone|separation_lane|separation_line|separation_boundary)$/.test(t)) tss.push({lat:lat2, lon:lon2});
+      });
+      const perWaypoint = waypoints.map(w=>({
+        lights: lights.filter(p=>haversineNm(w,p) <= 11),
+        tss: tss.filter(p=>haversineNm(w,p) <= 11)
+      }));
+      return {perWaypoint, allLights:lights, allTss:tss, error:null};
+    } catch(err){
+      lastError = (err && err.name==='AbortError') ? `Timeout (>12s) από ${endpoint}` : ((err && err.message) ? err.message : String(err));
+    }
+  }
+  return {perWaypoint: waypoints.map(()=>({lights:null,tss:null})), allLights:[], allTss:[], error:lastError};
+}
+
+// Flattened list of found lighthouses/TSS across the whole route, kept
+// globally so the map can redraw them (e.g. after a reset-zoom).
+let lastSeamarksFlat = {lights:[], tss:[]};
+
+function renderSeamarksOnMap(){
+  const layer = document.getElementById('seamarksLayer');
+  if(!layer || !mapReady) return;
+  const k = d3.zoomTransform(document.getElementById('worldMap')).k;
+  let svg = '';
+  lastSeamarksFlat.lights.forEach(p=>{
+    const [x,y] = mapProjection([p.lon,p.lat]);
+    svg += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(2/k).toFixed(3)}" data-base-r="2" fill="var(--amber)"/>`;
+  });
+  lastSeamarksFlat.tss.forEach(p=>{
+    const [x,y] = mapProjection([p.lon,p.lat]);
+    svg += `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(3/k).toFixed(3)}" data-base-r="3" fill="none" stroke="var(--coral)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+  });
+  layer.innerHTML = svg;
+}
+
+// Fetches weather + sea depth + seamarks for every waypoint, fills the
+// detailed table's per-row columns, and updates the aggregate summary block.
+async function updateLiveWeather(waypoints, draught){
+  const summaryEl=document.getElementById('weatherBlock');
+  const tbody=document.querySelector('#detailedTable tbody');
+
+  try{
+    const [results, bathy, seamarks] = await Promise.all([
+      Promise.all(waypoints.map(p=>fetchLiveWeatherPoint(p.lat,p.lon))),
+      fetchBathymetryBatch(waypoints),
+      fetchSeamarksBatch(waypoints)
+    ]);
+    const depths = bathy.depths;
+    lastSeamarksFlat = { lights: seamarks.allLights, tss: seamarks.allTss };
+    renderSeamarksOnMap();
+    if(tbody) tbody.innerHTML = detailedRowsHtml(waypoints, results, depths, draught, seamarks.perWaypoint);
+    const seamarksStatusEl = document.getElementById('seamarksStatus');
+    const statusMsgs = [];
+    if(bathy.error) statusMsgs.push(`Βάθος δεν φορτώθηκε: ${bathy.error}`);
+    if(seamarks.error) statusMsgs.push(`Φάροι/TSS δεν φορτώθηκαν: ${seamarks.error}`);
+    if(seamarksStatusEl) seamarksStatusEl.textContent = statusMsgs.join(' · ');
+    if(window.lastPlan){
+      window.lastPlan.liveWeather = results;
+      window.lastPlan.depths = depths;
+      window.lastPlan.seamarks = seamarks.perWaypoint;
+      window.lastPlan.depthsError = bathy.error;
+      window.lastPlan.seamarksError = seamarks.error;
+    }
+
+    const valid = results.filter(r=>r.wave!=null && r.windKn!=null);
+    if(!valid.length){
+      if(summaryEl) summaryEl.innerHTML = `<div class="result-sub danger">Ο καιρός δεν φορτώθηκε (χρειάζεται σύνδεση internet ή το API δεν απάντησε) — το βάθος/φάροι πιο πάνω παραμένουν έγκυρα.</div>`;
+      return;
+    }
+    const maxWave = Math.max(...valid.map(r=>r.wave));
+    const maxWind = Math.max(...valid.map(r=>r.windKn));
+    const rough = maxWave > 2.5;
+    if(summaryEl) summaryEl.innerHTML = `
+      <div class="result-value" style="font-size:15px">${rough?'Μέτρια έως ενισχυμένη θαλασσοταραχή':'Ήπιες συνθήκες'} <span class="tag ok">live</span></div>
+      <div class="result-sub">Μέγιστο κύμα στη διαδρομή: ${maxWave.toFixed(1)} m · μέγιστος άνεμος: ${maxWind.toFixed(0)} kn</div>
+      <div class="result-sub">Open-Meteo Marine + Forecast API · ${valid.length}/${waypoints.length} σημεία απάντησαν</div>`;
+  } catch(err){
+    if(summaryEl) summaryEl.innerHTML = `<div class="result-sub danger">Ο καιρός δεν φορτώθηκε (χρειάζεται σύνδεση internet ή το API δεν απάντησε).</div>`;
+    if(tbody) tbody.innerHTML = detailedRowsHtml(waypoints, waypoints.map(()=>({wave:null,windKn:null,currentKn:null,currentDir:null})), waypoints.map(()=>null), draught, waypoints.map(()=>({lights:null,tss:null})));
+  }
+}
+
+// ============================================================
+// PDF PASSAGE PLAN REPORT
+// Built with pdf-lib + fontkit (Noto Sans, for proper Greek text).
+// Layout is manual/low-level (pdf-lib has no HTML flow layout), using small
+// helpers below for page breaks, wrapped paragraphs, and colour-coded tags.
+// ============================================================
+
+const PDF_PAGE_W = 595.28, PDF_PAGE_H = 841.89, PDF_MARGIN = 48;
+const PDF_COLOR_TEXT = () => PDFLib.rgb(0.12,0.14,0.16);
+const PDF_COLOR_MUTED = () => PDFLib.rgb(0.45,0.47,0.5);
+const PDF_COLOR_HEAD = () => PDFLib.rgb(0.04,0.22,0.33);
+const PDF_COLOR_DANGER = () => PDFLib.rgb(0.75,0.11,0.11);
+const PDF_COLOR_WARN = () => PDFLib.rgb(0.72,0.42,0.02);
+const PDF_COLOR_LINE = () => PDFLib.rgb(0.8,0.8,0.8);
+
+async function pdfEmbedGreekFont(pdfDoc){
+  pdfDoc.registerFontkit(fontkit);
+  try{
+    const res = await fetch('https://raw.githubusercontent.com/notofonts/notofonts.github.io/noto-monthly-release-2026.05.01/fonts/NotoSans/full/ttf/NotoSans-Regular.ttf');
+    const bytes = await res.arrayBuffer();
+    const regular = await pdfDoc.embedFont(bytes, {subset:true});
+    let bold = regular;
+    try{
+      const resB = await fetch('https://raw.githubusercontent.com/notofonts/notofonts.github.io/noto-monthly-release-2026.05.01/fonts/NotoSans/full/ttf/NotoSans-Bold.ttf');
+      bold = await pdfDoc.embedFont(await resB.arrayBuffer(), {subset:true});
+    } catch(e){ /* fall back to regular for headings */ }
+    return {regular, bold, ok:true};
+  } catch(err){
+    // Fallback: standard Helvetica does not render Greek glyphs correctly,
+    // but at least the PDF is generated instead of failing outright.
+    const regular = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+    const bold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+    return {regular, bold, ok:false};
+  }
+}
+
+function pdfNewPage(pdfDoc){
+  const page = pdfDoc.addPage([PDF_PAGE_W, PDF_PAGE_H]);
+  return {page, y: PDF_PAGE_H - PDF_MARGIN};
+}
+
+function pdfEnsureSpace(ctx, pdfDoc, needed){
+  if(ctx.y - needed < PDF_MARGIN){
+    const np = pdfNewPage(pdfDoc);
+    ctx.page = np.page; ctx.y = np.y;
+  }
+}
+
+function pdfWrapText(text, font, size, maxWidth){
+  const words = String(text).split(' ');
+  const lines = [];
+  let cur = '';
+  words.forEach(w=>{
+    const test = cur ? cur+' '+w : w;
+    if(font.widthOfTextAtSize(test, size) > maxWidth && cur){ lines.push(cur); cur=w; }
+    else cur = test;
+  });
+  if(cur) lines.push(cur);
+  return lines;
+}
+
+function pdfParagraph(ctx, pdfDoc, text, font, size, color, maxWidth){
+  maxWidth = maxWidth || (PDF_PAGE_W - 2*PDF_MARGIN);
+  const lines = pdfWrapText(text, font, size, maxWidth);
+  lines.forEach(line=>{
+    pdfEnsureSpace(ctx, pdfDoc, size+5);
+    ctx.page.drawText(line, {x:PDF_MARGIN, y:ctx.y, size, font, color:color||PDF_COLOR_TEXT()});
+    ctx.y -= size+5;
+  });
+}
+
+function pdfPageHeader(ctx, pdfDoc, fonts, title, subtitle){
+  const np = pdfNewPage(pdfDoc);
+  ctx.page = np.page; ctx.y = np.y;
+  ctx.page.drawText(title, {x:PDF_MARGIN, y:ctx.y, size:17, font:fonts.bold, color:PDF_COLOR_HEAD()});
+  ctx.y -= 22;
+  if(subtitle){
+    ctx.page.drawText(subtitle, {x:PDF_MARGIN, y:ctx.y, size:10, font:fonts.regular, color:PDF_COLOR_MUTED()});
+    ctx.y -= 16;
+  }
+  ctx.page.drawLine({start:{x:PDF_MARGIN,y:ctx.y}, end:{x:PDF_PAGE_W-PDF_MARGIN,y:ctx.y}, thickness:1, color:PDF_COLOR_LINE()});
+  ctx.y -= 20;
+}
+
+function pdfKeyValueRow(ctx, pdfDoc, fonts, label, value){
+  pdfEnsureSpace(ctx, pdfDoc, 16);
+  ctx.page.drawText(label, {x:PDF_MARGIN, y:ctx.y, size:9, font:fonts.regular, color:PDF_COLOR_MUTED()});
+  ctx.page.drawText(String(value), {x:PDF_MARGIN+170, y:ctx.y, size:10, font:fonts.bold, color:PDF_COLOR_TEXT()});
+  ctx.y -= 16;
+}
+
+// Colour-coded line: kind = 'danger' (red) | 'warn' (orange) | null (normal)
+function pdfTagLine(ctx, pdfDoc, fonts, text, kind){
+  const color = kind==='danger' ? PDF_COLOR_DANGER() : (kind==='warn' ? PDF_COLOR_WARN() : PDF_COLOR_TEXT());
+  const prefix = kind==='danger' ? '[ΚΙΝΔΥΝΟΣ] ' : (kind==='warn' ? '[ΠΡΟΣΟΧΗ] ' : '');
+  const lines = pdfWrapText(prefix+text, fonts.regular, 9.5, PDF_PAGE_W-2*PDF_MARGIN-10);
+  lines.forEach((line,i)=>{
+    pdfEnsureSpace(ctx, pdfDoc, 14);
+    if(i===0 && kind){
+      ctx.page.drawRectangle({x:PDF_MARGIN-4, y:ctx.y-3, width:4, height:12, color});
+    }
+    ctx.page.drawText(line, {x:PDF_MARGIN+6, y:ctx.y, size:9.5, font:fonts.regular, color});
+    ctx.y -= 14;
+  });
+  ctx.y -= 2;
+}
+
+function pdfTableHeader(ctx, pdfDoc, fonts, cols){
+  pdfEnsureSpace(ctx, pdfDoc, 20);
+  let x = PDF_MARGIN;
+  cols.forEach(c=>{
+    ctx.page.drawText(c.label, {x, y:ctx.y, size:8.5, font:fonts.bold, color:PDF_COLOR_MUTED()});
+    x += c.w;
+  });
+  ctx.y -= 6;
+  ctx.page.drawLine({start:{x:PDF_MARGIN,y:ctx.y}, end:{x:PDF_PAGE_W-PDF_MARGIN,y:ctx.y}, thickness:0.75, color:PDF_COLOR_LINE()});
+  ctx.y -= 12;
+}
+
+function pdfTableRow(ctx, pdfDoc, fonts, cols, values, rowColor){
+  pdfEnsureSpace(ctx, pdfDoc, 15);
+  let x = PDF_MARGIN;
+  cols.forEach((c,i)=>{
+    const txt = values[i]==null ? '—' : String(values[i]);
+    const clipped = txt.length>28 ? txt.slice(0,27)+'…' : txt;
+    ctx.page.drawText(clipped, {x, y:ctx.y, size:8.5, font:fonts.regular, color:rowColor||PDF_COLOR_TEXT()});
+    x += c.w;
+  });
+  ctx.y -= 14;
+}
+
+// Bearing between two points along a great-circle course (degrees, 0-360)
+function pdfInitialBearingGC(a,b){
+  const φ1=toRad(a.lat), φ2=toRad(b.lat), Δλ=toRad(b.lon-a.lon);
+  const y=Math.sin(Δλ)*Math.cos(φ2);
+  const x=Math.cos(φ1)*Math.sin(φ2)-Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
+  return (toDeg(Math.atan2(y,x))+360)%360;
+}
+
+// Captures the current on-screen SVG map as a PNG (canvas snapshot). CSS
+// variables (var(--teal) etc.) don't resolve once the SVG is serialized
+// standalone, so they're substituted with their real hex values first.
+// Uses canvg to draw the SVG directly onto the canvas — this avoids the
+// browser's native <img src="svg..."> loading pipeline, which was failing
+// with an opaque "[object Event]" error and no useful diagnostic info.
+// Draws a simple schematic route sketch directly on the PDF page using only
+// pdf-lib's own vector primitives (lines, circles, text) — no external
+// rasterization library, no canvas, no image conversion. This replaced an
+// image-based map (SVG->canvas->PNG) that repeatedly failed depending on how
+// the file was opened (canvg module-loading is blocked on file:// pages in
+// several browsers). Projects each waypoint with plain equirectangular math.
+// Draws the route sketch directly on the PDF page using pdf-lib's native
+// vector primitives — no external rasterization library, canvas, or image
+// conversion (a previous image-based approach kept failing depending on how
+// the file was opened). Real coastlines are drawn by reusing the SAME <path>
+// data already rendered in the on-screen map's #mapLayer (from Natural Earth,
+// already loaded when the app started) via pdf-lib's native drawSvgPath —
+// and the SAME mapProjection used on-screen, so waypoints line up exactly
+// with the coastlines. Verified with real rendered-PDF tests (coordinate
+// mapping and clipping both confirmed pixel-accurate before shipping this).
+function drawPdfRouteSketch(ctx, pdfDoc, waypoints, fonts){
+  const boxW = PDF_PAGE_W - 2*PDF_MARGIN;
+  const boxH = 300;
+  pdfEnsureSpace(ctx, pdfDoc, boxH + 20);
+  const boxX = PDF_MARGIN, boxTop = ctx.y, boxBottom = boxTop - boxH;
+
+  const haveMap = mapReady && mapProjection && document.querySelectorAll('#mapLayer path.country-path').length;
+
+  if(haveMap){
+    // Project every waypoint into the same 640x320 space the on-screen map uses
+    const svgPts = waypoints.map(w => { const [x,y] = mapProjection([w.lon, w.lat]); return {x,y}; });
+    let minX = Math.min(...svgPts.map(p=>p.x)), maxX = Math.max(...svgPts.map(p=>p.x));
+    let minY = Math.min(...svgPts.map(p=>p.y)), maxY = Math.max(...svgPts.map(p=>p.y));
+    const padX = Math.max((maxX-minX)*0.18, 20), padY = Math.max((maxY-minY)*0.18, 20);
+    minX -= padX; maxX += padX; minY -= padY; maxY += padY;
+    const spanX = Math.max(maxX-minX, 1), spanY = Math.max(maxY-minY, 1);
+    const scale = Math.min(boxW/spanX, boxH/spanY);
+    // Center the zoomed region within the box
+    const drawnW = spanX*scale, drawnH = spanY*scale;
+    const anchorX = boxX + (boxW-drawnW)/2 - minX*scale;
+    const anchorY = boxTop - (boxH-drawnH)/2 + minY*scale;
+    const toPdf = (svgX,svgY) => ({x: anchorX + svgX*scale, y: anchorY - svgY*scale});
+
+    // Ocean background, then clip everything after this to the box so land
+    // shapes from anywhere in the world can't bleed outside it.
+    ctx.page.drawRectangle({x:boxX, y:boxBottom, width:boxW, height:boxH, color:PDFLib.rgb(0.039,0.102,0.157)});
+    ctx.page.pushOperators(
+      PDFLib.pushGraphicsState(),
+      PDFLib.moveTo(boxX, boxBottom), PDFLib.lineTo(boxX+boxW, boxBottom),
+      PDFLib.lineTo(boxX+boxW, boxTop), PDFLib.lineTo(boxX, boxTop),
+      PDFLib.closePath(), PDFLib.clip(), PDFLib.endPath()
+    );
+    document.querySelectorAll('#mapLayer path.country-path').forEach(pathEl=>{
+      const d = pathEl.getAttribute('d');
+      if(!d) return;
+      try{
+        ctx.page.drawSvgPath(d, {x:anchorX, y:anchorY, scale, color:PDFLib.rgb(0.122,0.267,0.376), borderColor:PDFLib.rgb(0.086,0.196,0.282), borderWidth:0.3});
+      } catch(e){ /* skip any path pdf-lib's simple parser can't handle */ }
+    });
+    ctx.page.pushOperators(PDFLib.popGraphicsState()); // remove clip for what follows
+
+    // Route line + waypoint markers, in the SAME projected space as the coastlines
+    const pts = svgPts.map(p=>toPdf(p.x,p.y));
+    for(let i=0;i<pts.length-1;i++){
+      if(Math.abs(waypoints[i+1].lon - waypoints[i].lon) > 180) continue; // antimeridian jump
+      ctx.page.drawLine({start:pts[i], end:pts[i+1], thickness:1.3, color:PDFLib.rgb(0.18,0.75,0.66), dashArray:[3,2]});
+    }
+    // With many waypoints, labeling every single one overlaps into an
+    // unreadable jumble — thin them out (endpoints always shown) but still
+    // draw a dot for every waypoint.
+    const labelStride = Math.max(1, Math.ceil((pts.length-2)/10));
+    pts.forEach((p,i)=>{
+      const isEnd = i===0 || i===pts.length-1;
+      ctx.page.drawCircle({x:p.x, y:p.y, size: isEnd?3.4:2.4, color: isEnd?PDFLib.rgb(0.95,0.66,0.24):PDFLib.rgb(0.18,0.75,0.66), borderColor:PDFLib.rgb(0.039,0.102,0.157), borderWidth:0.6});
+      if(!isEnd && (i % labelStride !== 0)) return;
+      const coordLabel = `WP${i}  ${formatCoord(waypoints[i].lat, waypoints[i].lon, 1)}`;
+      const labelAbove = i%2===0; // alternate to reduce overlap on dense routes
+      const ly = labelAbove ? p.y+7 : p.y-9;
+      ctx.page.drawText(coordLabel, {x:p.x-18, y:ly, size:5.6, font:fonts.regular, color:PDFLib.rgb(0.9,0.92,0.94)});
+    });
+
+    ctx.page.drawRectangle({x:boxX, y:boxBottom, width:boxW, height:boxH, borderColor:PDF_COLOR_LINE(), borderWidth:1});
+  } else {
+    // Fallback: no map data loaded (e.g. no internet when the page opened) —
+    // draw the route on a plain lat/lon grid instead of leaving it blank.
+    const lats = waypoints.map(w=>w.lat), lons = waypoints.map(w=>w.lon);
+    let latMin = Math.min(...lats), latMax = Math.max(...lats);
+    let lonMin = Math.min(...lons), lonMax = Math.max(...lons);
+    const latPad = Math.max((latMax-latMin)*0.15, 3), lonPad = Math.max((lonMax-lonMin)*0.15, 3);
+    latMin -= latPad; latMax += latPad; lonMin -= lonPad; lonMax += lonPad;
+    const lonSpan = Math.max(lonMax-lonMin, 0.001), latSpan = Math.max(latMax-latMin, 0.001);
+    const project = (lat,lon) => ({ x: boxX + ((lon-lonMin)/lonSpan)*boxW, y: boxBottom + ((lat-latMin)/latSpan)*boxH });
+
+    ctx.page.drawRectangle({x:boxX, y:boxBottom, width:boxW, height:boxH, color:PDFLib.rgb(0.06,0.10,0.16)});
+    ctx.page.drawRectangle({x:boxX, y:boxBottom, width:boxW, height:boxH, borderColor:PDF_COLOR_LINE(), borderWidth:1});
+    const pts = waypoints.map(w=>project(w.lat,w.lon));
+    for(let i=0;i<pts.length-1;i++){
+      if(Math.abs(waypoints[i+1].lon - waypoints[i].lon) > 180) continue;
+      ctx.page.drawLine({start:pts[i], end:pts[i+1], thickness:1.2, color:PDFLib.rgb(0.18,0.75,0.66), dashArray:[3,2]});
+    }
+    // Same label-thinning as the main branch — with many waypoints, labeling
+    // every single one overlaps into an unreadable jumble.
+    const labelStride = Math.max(1, Math.ceil((pts.length-2)/10));
+    pts.forEach((p,i)=>{
+      const isEnd = i===0 || i===pts.length-1;
+      ctx.page.drawCircle({x:p.x, y:p.y, size: isEnd?3.2:2.2, color: isEnd?PDFLib.rgb(0.95,0.66,0.24):PDFLib.rgb(0.18,0.75,0.66)});
+      if(!isEnd && (i % labelStride !== 0)) return;
+      const labelAbove = i%2===0;
+      const ly = labelAbove ? p.y+6 : p.y-8;
+      ctx.page.drawText(`WP${i} ${formatCoord(waypoints[i].lat,waypoints[i].lon,1)}`, {x:p.x-18, y:ly, size:5.6, font:fonts.regular, color:PDFLib.rgb(0.85,0.87,0.89)});
+    });
+  }
+
+  ctx.y = boxBottom - 14;
+}
+
+const PDF_I18N = {
+  el: {
+    calcFirst:'Υπολόγισε πρώτα ένα passage plan.', generating:'Δημιουργία PDF…',
+    shipType:'Τύπος πλοίου', loadState:'Κατάσταση φόρτωσης', laden:'Φορτωμένο (laden)', ballast:'Με έρμα (ballast)',
+    draughtAir:'Draught / Air draught', departure:'Αναχώρηση', etaLabel:'Εκτιμώμενη άφιξη (ETA)',
+    cargoQtyLabel:'Ποσότητα φορτίου', draughtFwdAftLabel:'Βύθισμα FWD / AFT', trimLabel:'Διαγωγή (Trim)',
+    trimStern:'by the stern', trimHead:'by the head', airDraughtLabel:'Air draught',
+    ecaTitle:'Ζώνες ECA/SECA & αλλαγή καυσίμου', ecaSub:'Σημεία εισόδου/εξόδου ζωνών ελέγχου εκπομπών (MARPOL Annex VI)',
+    ecaEnter:'Είσοδος σε', ecaExit:'Έξοδος από', ecaFuelNote:'Απαιτείται αλλαγή σε καύσιμο ≤0.10% θείου πριν την είσοδο.',
+    ecaNone:'Η διαδρομή δεν περνάει μέσα από γνωστή ζώνη ECA/SECA.',
+    ecaDisclaimer:'Σχηματικά όρια ζωνών (bounding boxes), όχι ακριβή γεωγραφικά περιγράμματα — επιβεβαίωση από επίσημη πηγή (MARPOL Annex VI, Regulation 14) πριν το ταξίδι.',
+    encTitle:'ENC κάλυψη & CATZOC', encSub:'Θαλάσσιες/χερσαίες περιοχές που χρειάζονται επίσημα ENC για αυτό το ταξίδι',
+    encRegionsIntro:'Η διαδρομή περνάει από τις παρακάτω περιοχές — χρειάζεται επίσημο ENC κάλυψης για καθεμία, μέσω PRIMAR ή IC-ENC (RENC) ή απευθείας από την αντίστοιχη Υδρογραφική Υπηρεσία:',
+    encDisclaimer:'Αυτό το πρωτότυπο ΔΕΝ έχει πρόσβαση σε πραγματικό κατάλογο ENC cell — δεν μπορεί να δώσει συγκεκριμένους αριθμούς κελιών (π.χ. GB1D1000) ή ημερομηνίες τελευταίας διόρθωσης. Η πλήρης λίστα ENC cells πρέπει να αντληθεί από το ECDIS/κατάλογο του πλοίου πριν το ταξίδι.',
+    catzocTitle:'CATZOC (Category of Zone of Confidence)', catzocBody:'Το CATZOC δείχνει την αξιοπιστία/ποιότητα των δεδομένων βάθους ενός ENC κελιού (A1=υψηλότερη ακρίβεια έως D/U=άγνωστη/χαμηλή). Αυτό το πρωτότυπο δεν έχει πρόσβαση σε πραγματικά ENC δεδομένα και άρα ΔΕΝ μπορεί να υπολογίσει CATZOC ανά waypoint — απαιτείται έλεγχος στο πραγματικό ECDIS/ENC πριν το ταξίδι, ειδικά σε παράκτιες/ρηχές περιοχές.',
+    duration:'Διάρκεια ταξιδιού', days:'ημέρες', totalDist:'Συνολική απόσταση', courseType:'Τρόπος πλεύσης',
+    rhumb:'Λοξοδρομία', greatCircle:'Ορθοδρομία', avgSpeed:'Απαιτούμενη μέση ταχύτητα', estFuel:'Εκτιμώμενα καύσιμα',
+    fontWarn:'Σημείωση: η ελληνική γραμματοσειρά δεν φορτώθηκε (χρειάζεται σύνδεση internet) — χρησιμοποιήθηκε εναλλακτική γραμματοσειρά που ενδέχεται να μην αποδίδει σωστά ελληνικούς χαρακτήρες.',
+    generated:'Δημιουργήθηκε', prototypeNote:'Πρωτότυπο AI Passage Planner — όχι επίσημο έγγραφο ναυσιπλοΐας',
+    routeWaypoints:'Αναλυτική διαδρομή & waypoints', points:'σημεία', totalNm:'nm συνολικά',
+    wp:'WP', coords:'Συντεταγμένες', point:'Σημείο',
+    mapHeader:'Χάρτης διαδρομής', mapSub:'Σχηματικό διάγραμμα (γεωγρ. πλάτος/μήκος) — waypoints και πορεία. Δες τον πλήρη διαδραστικό χάρτη στην εφαρμογή για πραγματική ακτογραμμή.',
+    mapFail:'Ο χάρτης δεν φορτώθηκε (χρειάζεται ενεργή σύνδεση internet κατά τη δημιουργία του PDF).',
+    coursesDist:'Πορείες & αποστάσεις', coursesSub:'Πορεία (°) και απόσταση (nm) ανά σκέλος της διαδρομής',
+    leg:'Σκέλος', course:'Πορεία (°)', distNm:'Απόσταση (nm)', cumNm:'Αθροιστικά (nm)',
+    depthsTitle:'Βάθη & βυθίσματα (UKC)', shipDraught:'Draught πλοίου',
+    depthCol:'Βάθος', statusCol:'Κατάσταση', shallowStatus:'ΡΗΧΑ — έλεγχος', okDepth:'Επαρκές βάθος',
+    depthNote:'Σημείωση: βάθη από GEBCO bathymetry grid (~450m-1km ανάλυση) — ενδεικτικά, όχι υποκατάστατο επίσημου ENC/sounding chart.',
+    hazardsTitle:'Κίνδυνοι & διελεύσεις TSS', hazardsSub:'Επισημασμένα σημεία της διαδρομής που χρειάζονται προσοχή',
+    tssWarnText:'διέλευση κοντά σε ζώνη TSS (OpenSeaMap) — αυξημένη κυκλοφορία, τήρηση κανόνων διαχωρισμού.',
+    shallowDangerText:'ύποπτα ρηχό νερό ({d}m) σε σχέση με το draught — απαιτείται έλεγχος επίσημου chart.',
+    noHazards:'Καμία ιδιαίτερη επισήμανση κινδύνου εντοπίστηκε στα σημεία της διαδρομής.',
+    hazardsNote:"Σημείωση: δεν υπάρχει live πηγή για ναυάγια/υφάλους σε αυτό το πρωτότυπο — μόνο τα σημεία που ήδη εντοπίζονται από τον γράφο περασμάτων, το βάθος (GEBCO) και το OpenSeaMap. Απαιτείται έλεγχος επίσημων ENC/Notices to Mariners πριν το ταξίδι.",
+    restrictionsTitle:'Περιορισμοί & απαγορεύσεις περιοχής', restrictionsSub:'Κανάλια, εντολές αποφυγής και πολιτική εταιρίας',
+    noCanals:'Δεν εντοπίστηκαν διώρυγες με ειδικούς περιορισμούς σε αυτή τη διαδρομή.',
+    avoidedPassages:'Περάσματα προς αποφυγή (εντολή/πολιτική)',
+    avoidFailed:'Δεν ήταν εφικτό να αποφευχθούν όλα τα ζητούμενα περάσματα ταυτόχρονα — υπολογίστηκε η κανονική διαδρομή.',
+    policyMaxSpeed:'Ανώτατη ταχύτητα πολιτικής', policyMinReserve:'Ελάχιστο απόθεμα πολιτικής',
+    policyEco:'Eco-speed', policyEcoVal:'Ζητήθηκε από πολιτική εταιρίας',
+    weatherTitle:'Καιρός, ρεύματα & παλίρροιες', weatherSub:'Live δεδομένα ανά waypoint (Open-Meteo Marine/Forecast API)',
+    wave:'Κύμα', wind:'Άνεμος', current:'Ρεύμα', currentDir:'Κατεύθυνση ρεύματος',
+    tidesNote:'Παλίρροιες: δεν υπάρχει δωρεάν live API για προβλέψεις παλίρροιας ανά σταθμό σε αυτό το πρωτότυπο· χρειάζονται τοπικοί πίνακες παλίρροιας (Admiralty Tide Tables ή αντίστοιχο εθνικό hydrographic office) πριν το ταξίδι, ειδικά σε παράκτιες/ρηχές περιοχές.',
+    navAidsTitle:'Βοηθήματα ναυσιπλοΐας (φάροι)', navAidsSub:'Φάροι εντοπισμένοι κοντά στη διαδρομή (OpenSeaMap, crowd-sourced)',
+    lightsFoundSingular:'φάρος εντοπίστηκε σε ακτίνα ~11nm.', lightsFoundPlural:'φάροι εντοπίστηκαν σε ακτίνα ~11nm.',
+    noLights:'Δεν εντοπίστηκαν φάροι κοντά στα σημεία της διαδρομής (ή τα δεδομένα δεν φόρτωσαν ακόμα κατά τη δημιουργία του PDF).',
+    wheelOverTitle:'Σημεία αλλαγής πορείας (wheel-over) & ώρες', wheelOverSub:'Βάσει σταθερής ταχύτητας',
+    cumDistCol:'Αθρ. απόσταση (nm)', etaCol:'Εκτιμ. ώρα διέλευσης',
+    emergencyTitle:'Σχέδιο έκτακτης ανάγκης', emergencySub:'Γενικές διαδικασίες αναφοράς — να συμπληρωθεί με το ειδικό σχέδιο του πλοίου',
+    emergencySections: [
+      ['Man overboard (MOB)', 'Κραυγή "Man overboard", ρίψη σημαδούρας/κύκλου, στροφή Williamson ή αντίστοιχη, ενεργοποίηση GPS MOB, κλήση πληρώματος στη γέφυρα, ενημέρωση Πλοιάρχου.'],
+      ['Πυρκαγιά', 'Ενεργοποίηση συναγερμού, εντοπισμός/απομόνωση πηγής, διακοπή αερισμού στον χώρο, χρήση κατάλληλου συστήματος κατάσβεσης, muster station, ενημέρωση VTS/κοντινών αρχών αν χρειαστεί.'],
+      ['Εισροή υδάτων / βύθιση', 'Εντοπισμός διαμερίσματος, κλείσιμο στεγανών θυρών, ενεργοποίηση αντλιών, αξιολόγηση ευστάθειας, προετοιμασία εγκατάλειψης αν απαιτείται.'],
+      ['Σύγκρουση / προσάραξη', 'Έλεγχος βλαβών/εισροής, ακινητοποίηση μηχανής αν χρειάζεται, ενημέρωση αρχών, αξιολόγηση ρύπανσης, ενεργοποίηση SOPEP/SMPEP αν εφαρμόζεται.'],
+      ['Ιατρικό περιστατικό', 'Πρώτες βοήθειες, επικοινωνία με ιατρική συμβουλευτική υπηρεσία (TMAS/Radio Medical), αξιολόγηση ανάγκης medevac, ενημέρωση πλησιέστερου κατάλληλου λιμανιού.'],
+      ['Εγκατάλειψη πλοίου', 'Γενικός συναγερμός, muster stations, ενεργοποίηση EPIRB, κατάληψη σωσιβίων λέμβων/σχεδιών, τελευταία θέση GPS σε MAYDAY.']
+    ],
+    attachmentYes:'Επισυναπτόμενο αρχείο πλοίου: "{name}" — βλέπε Παράρτημα στο τέλος του εγγράφου.',
+    attachmentNo:'Δεν επισυνάφθηκε ειδικό σχέδιο πλοίου σε αυτό το PDF — πρόσθεσε αρχείο στη φόρμα πριν τη δημιουργία, αν χρειάζεται.',
+    chartsTitle:'Χάρτες & ναυτικές δημοσιεύσεις', chartsSub:'Πηγές αναφοράς που θα χρησιμοποιηθούν/ελεγχθούν πριν το ταξίδι',
+    chartsList: [
+      'Επίσημα ENC μέσω PRIMAR ή IC-ENC (RENC) για όλη τη διαδρομή, ενημερωμένα στην τελευταία έκδοση.',
+      'Admiralty Sailing Directions (Pilots) ή αντίστοιχες εθνικές, για κάθε περιοχή διέλευσης.',
+      'Notices to Mariners (NtM) — έλεγχος πρόσφατων τροποποιήσεων πριν την αναχώρηση.',
+      'Κατάλογοι φάρων (List of Lights) της περιοχής.',
+      'Πίνακες παλίρροιας (Tide Tables) για παράκτιες/ρηχές περιοχές της διαδρομής.',
+      'MSI/NAVTEX και SafetyNET μηνύματα για τις σχετικές περιοχές Inmarsat (βλ. αναλυτική αναφορά διαδρομής).'
+    ],
+    chartsNote:'Αυτό το έγγραφο είναι πρωτότυπο σχεδιασμού και ΔΕΝ αντικαθιστά επίσημα ENC/δημοσιεύσεις ούτε την κρίση του Πλοιάρχου.',
+    signOffTitle:'Έλεγχος & έγκριση', signOffSub:'Το passage plan ελέγχθηκε και έγινε κατανοητό από:',
+    sigRoles:['Πλοίαρχος (Master)', 'Υποπλοίαρχος (Chief Officer)', 'Α’ Μηχανικός (Chief Engineer)'],
+    nameField:'Όνομα: ______________________________', dateField:'Ημερομηνία: __________________', sigField:'Υπογραφή: ______________________________',
+    appendixTitle:'Παράρτημα', appendixShip:'Παράρτημα: σχέδιο πλοίου / έγγραφο έκτακτης ανάγκης', appendixFail:'Το επισυναπτόμενο αρχείο δεν ήταν δυνατό να προστεθεί.',
+    pdfDone:'Το PDF δημιουργήθηκε και κατέβηκε.', pdfDoneNoFont:' (χωρίς ελληνική γραμματοσειρά — δες σημείωση στο εξώφυλλο)',
+    pdfError:'Σφάλμα δημιουργίας PDF: '
+  },
+  en: {
+    calcFirst:'Calculate a passage plan first.', generating:'Generating PDF…',
+    shipType:'Ship type', loadState:'Load condition', laden:'Laden', ballast:'Ballast',
+    draughtAir:'Draught / Air draught', departure:'Departure', etaLabel:'Estimated arrival (ETA)',
+    cargoQtyLabel:'Cargo quantity', draughtFwdAftLabel:'Draught FWD / AFT', trimLabel:'Trim',
+    trimStern:'by the stern', trimHead:'by the head', airDraughtLabel:'Air draught',
+    ecaTitle:'ECA/SECA zones & fuel changeover', ecaSub:'Entry/exit points for emission control areas (MARPOL Annex VI)',
+    ecaEnter:'Entering', ecaExit:'Leaving', ecaFuelNote:'Change to ≤0.10% sulphur fuel required before entry.',
+    ecaNone:'The route does not pass through any known ECA/SECA zone.',
+    ecaDisclaimer:'Schematic zone boundaries (bounding boxes), not exact geographic outlines — confirm against an official source (MARPOL Annex VI, Regulation 14) before the voyage.',
+    encTitle:'ENC coverage & CATZOC', encSub:'Sea/coastal areas that need official ENC coverage for this voyage',
+    encRegionsIntro:'The route passes through the following areas — official ENC coverage is needed for each, via PRIMAR or IC-ENC (RENC) or directly from the relevant national Hydrographic Office:',
+    encDisclaimer:'This prototype does NOT have access to a real ENC cell catalogue — it cannot give specific cell numbers (e.g. GB1D1000) or last-correction dates. The full ENC cell list must be pulled from the vessel ECDIS/catalogue before the voyage.',
+    catzocTitle:'CATZOC (Category of Zone of Confidence)', catzocBody:'CATZOC indicates the reliability/quality of the depth data in an ENC cell (A1 = highest accuracy, down to D/U = unknown/low). This prototype has no access to real ENC data and therefore CANNOT compute CATZOC per waypoint — check the actual ECDIS/ENC before the voyage, especially in coastal/shallow areas.',
+    duration:'Voyage duration', days:'days', totalDist:'Total distance', courseType:'Course type',
+    rhumb:'Rhumb line', greatCircle:'Great circle', avgSpeed:'Required average speed', estFuel:'Estimated fuel',
+    fontWarn:'Note: the Greek font failed to load (needs an internet connection) — a fallback font was used which may not render Greek characters correctly.',
+    generated:'Generated', prototypeNote:'AI Passage Planner prototype — not an official navigation document',
+    routeWaypoints:'Detailed route & waypoints', points:'points', totalNm:'nm total',
+    wp:'WP', coords:'Coordinates', point:'Point',
+    mapHeader:'Route map', mapSub:'Schematic diagram (lat/lon) — waypoints and course. See the app\u2019s full interactive map for real coastlines.',
+    mapFail:'The map failed to load (needs an active internet connection while generating the PDF).',
+    coursesDist:'Courses & distances', coursesSub:'Course (°) and distance (nm) per leg of the route',
+    leg:'Leg', course:'Course (°)', distNm:'Distance (nm)', cumNm:'Cumulative (nm)',
+    depthsTitle:'Depths & draught (UKC)', shipDraught:'Ship draught',
+    depthCol:'Depth', statusCol:'Status', shallowStatus:'SHALLOW — check', okDepth:'Sufficient depth',
+    depthNote:'Note: depths from the GEBCO bathymetry grid (~450m-1km resolution) — indicative only, not a substitute for an official ENC/sounding chart.',
+    hazardsTitle:'Hazards & TSS crossings', hazardsSub:'Points on the route that need attention',
+    tssWarnText:'crossing near a TSS zone (OpenSeaMap) — increased traffic, follow separation rules.',
+    shallowDangerText:'suspiciously shallow water ({d}m) relative to draught — check an official chart.',
+    noHazards:'No particular hazard was flagged at the points on this route.',
+    hazardsNote:'Note: this prototype has no live source for wrecks/reefs — only points already flagged by the sea-lane graph, depth (GEBCO), and OpenSeaMap. Official ENC/Notices to Mariners must be checked before the voyage.',
+    restrictionsTitle:'Area restrictions & prohibitions', restrictionsSub:'Canals, avoidance commands and company policy',
+    noCanals:'No canals with special restrictions were found on this route.',
+    avoidedPassages:'Passages avoided (command/policy)',
+    avoidFailed:'It was not possible to avoid all the requested passages at once — the normal route was used instead.',
+    policyMaxSpeed:'Policy maximum speed', policyMinReserve:'Policy minimum reserve',
+    policyEco:'Eco-speed', policyEcoVal:'Requested by company policy',
+    weatherTitle:'Weather, currents & tides', weatherSub:'Live data per waypoint (Open-Meteo Marine/Forecast API)',
+    wave:'Wave', wind:'Wind', current:'Current', currentDir:'Current direction',
+    tidesNote:'Tides: this prototype has no free live API for per-station tide predictions; local tide tables (Admiralty Tide Tables or the relevant national hydrographic office) are needed before the voyage, especially in coastal/shallow areas.',
+    navAidsTitle:'Navigation aids (lighthouses)', navAidsSub:'Lighthouses found near the route (OpenSeaMap, crowd-sourced)',
+    lightsFoundSingular:'lighthouse found within ~11nm.', lightsFoundPlural:'lighthouses found within ~11nm.',
+    noLights:'No lighthouses were found near the points on this route (or the data had not loaded yet while generating the PDF).',
+    wheelOverTitle:'Wheel-over points & times', wheelOverSub:'Based on constant speed of',
+    cumDistCol:'Cum. distance (nm)', etaCol:'Est. time at point',
+    emergencyTitle:'Emergency plan', emergencySub:"General reporting procedures — to be completed with the ship's specific plan",
+    emergencySections: [
+      ['Man overboard (MOB)', 'Shout "Man overboard", throw a lifebuoy/marker, execute a Williamson turn or equivalent, activate GPS MOB, muster crew on the bridge, inform the Master.'],
+      ['Fire', 'Sound the alarm, locate/isolate the source, stop ventilation to the space, use the appropriate extinguishing system, muster station, inform VTS/nearby authorities if needed.'],
+      ['Flooding / sinking', 'Locate the compartment, close watertight doors, activate pumps, assess stability, prepare to abandon ship if required.'],
+      ['Collision / grounding', 'Check for damage/ingress, stop the engine if needed, inform authorities, assess pollution, activate SOPEP/SMPEP if applicable.'],
+      ['Medical emergency', 'First aid, contact a medical advisory service (TMAS/Radio Medical), assess need for medevac, inform the nearest suitable port.'],
+      ['Abandon ship', 'General alarm, muster stations, activate EPIRB, board survival craft/liferafts, transmit last GPS position in a MAYDAY.']
+    ],
+    attachmentYes:'Attached ship file: "{name}" — see Appendix at the end of the document.',
+    attachmentNo:"No ship-specific plan was attached to this PDF — add a file in the form before generating it, if needed.",
+    chartsTitle:'Charts & nautical publications', chartsSub:'Reference sources to be used/checked before the voyage',
+    chartsList: [
+      'Official ENC via PRIMAR or IC-ENC (RENC) for the whole route, updated to the latest edition.',
+      'Admiralty Sailing Directions (Pilots) or the equivalent national ones, for each area transited.',
+      'Notices to Mariners (NtM) — check for recent amendments before departure.',
+      'List of Lights for the area.',
+      'Tide Tables for coastal/shallow areas along the route.',
+      'MSI/NAVTEX and SafetyNET messages for the relevant Inmarsat regions (see the detailed route report).'
+    ],
+    chartsNote:'This document is a planning prototype and does NOT replace official ENC/publications or the judgement of the Master.',
+    signOffTitle:'Review & approval', signOffSub:'The passage plan was reviewed and understood by:',
+    sigRoles:['Master', 'Chief Officer', 'Chief Engineer'],
+    nameField:'Name: ______________________________', dateField:'Date: __________________', sigField:'Signature: ______________________________',
+    appendixTitle:'Appendix', appendixShip:"Appendix: ship's plan / emergency document", appendixFail:'The attached file could not be added.',
+    pdfDone:'The PDF was generated and downloaded.', pdfDoneNoFont:' (no Greek font — see note on the cover page)',
+    pdfError:'PDF generation error: '
+  }
+};
+
+async function generatePdfReport(lang){
+  lang = lang || 'el';
+  const L = (k)=> PDF_I18N[lang][k];
+  const statusEl = document.getElementById('pdfStatus');
+  const plan = window.lastPlan;
+  if(!plan){ if(statusEl) statusEl.textContent = L('calcFirst'); return; }
+
+  // If weather/depth/lighthouse data hasn't loaded yet (or was cleared by a
+  // recent edit), fetch it now and WAIT — otherwise those PDF pages would be
+  // built from nulls and show up empty/dashed.
+  if(!plan.liveWeather || !plan.depths || !plan.seamarks){
+    if(statusEl) statusEl.textContent = (lang==='en' ? 'Loading live weather/depth/lighthouse data first…' : 'Φόρτωση live δεδομένων καιρού/βάθους/φάρων πρώτα…');
+    await updateLiveWeather(plan.waypoints, plan.draught);
+  }
+
+  if(statusEl) statusEl.textContent = L('generating');
+
+  try{
+    const pdfDoc = await PDFLib.PDFDocument.create();
+    const fonts = await pdfEmbedGreekFont(pdfDoc);
+    const ctx = {page:null, y:0};
+    const locale = lang==='en' ? 'en-GB' : 'el-GR';
+    const genTime = new Date().toLocaleString(locale);
+
+    // ---- Cover page ----
+    let np = pdfNewPage(pdfDoc); ctx.page=np.page; ctx.y=np.y;
+    ctx.page.drawText('PASSAGE PLAN', {x:PDF_MARGIN, y:ctx.y, size:28, font:fonts.bold, color:PDF_COLOR_HEAD()});
+    ctx.y -= 30;
+    const idParts = [plan.vesselName, plan.imoNo?('IMO '+plan.imoNo):null, plan.voyageNo?('Voy. '+plan.voyageNo):null].filter(Boolean);
+    if(idParts.length){
+      ctx.page.drawText(idParts.join('   ·   '), {x:PDF_MARGIN, y:ctx.y, size:12, font:fonts.bold, color:PDF_COLOR_TEXT()});
+      ctx.y -= 20;
+    }
+    ctx.page.drawText(`${plan.from.label}  →  ${plan.to.label}`, {x:PDF_MARGIN, y:ctx.y, size:15, font:fonts.regular, color:PDF_COLOR_TEXT()});
+    ctx.y -= 40;
+    ctx.page.drawLine({start:{x:PDF_MARGIN,y:ctx.y}, end:{x:PDF_PAGE_W-PDF_MARGIN,y:ctx.y}, thickness:1, color:PDF_COLOR_LINE()});
+    ctx.y -= 26;
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('shipType'), plan.profile.label);
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('loadState'), plan.loadState==='laden'?L('laden'):L('ballast'));
+    if(plan.cargoQty!=null) pdfKeyValueRow(ctx,pdfDoc,fonts,L('cargoQtyLabel'), plan.cargoQty.toFixed(0)+' MT');
+    const dFwd = parseFloat(document.getElementById('draughtFwd').value);
+    const dAft = parseFloat(document.getElementById('draughtAft').value);
+    if(!isNaN(dFwd) && !isNaN(dAft)){
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('draughtFwdAftLabel'), `FWD ${dFwd.toFixed(2)} m  /  AFT ${dAft.toFixed(2)} m`);
+    }
+    if(plan.trim!=null){
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('trimLabel'), `${plan.trim>=0?'+':''}${plan.trim} m (${plan.trim>=0?L('trimStern'):L('trimHead')})`);
+    }
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('airDraughtLabel'), `${plan.airDraught.toFixed(1)} m`);
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('departure'), plan.dep.toLocaleString(locale));
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('etaLabel'), plan.arr.toLocaleString(locale));
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('duration'), `${plan.days.toFixed(1)} ${L('days')}`);
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('totalDist'), `${plan.distanceNm.toFixed(0)} nm`);
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('courseType'), plan.routingMode==='rhumbline'?L('rhumb'):L('greatCircle'));
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('avgSpeed'), `${plan.requiredSpeed.toFixed(1)} kn`);
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('estFuel'), `${plan.estFuel.toFixed(1)} MT`);
+    ctx.y -= 20;
+    if(!fonts.ok){
+      pdfParagraph(ctx,pdfDoc,L('fontWarn'), fonts.regular, 9, PDF_COLOR_WARN());
+    }
+    ctx.page.drawText(`${L('generated')}: ${genTime}  ·  ${L('prototypeNote')}`, {x:PDF_MARGIN, y:PDF_MARGIN, size:8, font:fonts.regular, color:PDF_COLOR_MUTED()});
+
+    // ---- Route / waypoints ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('routeWaypoints'), `${plan.waypoints.length} ${L('points')} · ${plan.distanceNm.toFixed(0)} ${L('totalNm')}`);
+    const wpCols = [{label:L('wp'),w:35},{label:L('coords'),w:170},{label:L('point'),w:260}];
+    pdfTableHeader(ctx,pdfDoc,fonts,wpCols);
+    plan.waypoints.forEach((w,i)=>{
+      pdfTableRow(ctx,pdfDoc,fonts,wpCols,[`WP${i}`, formatCoord(w.lat,w.lon,2), w.label]);
+    });
+
+    // ---- Map image ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('mapHeader'), L('mapSub'));
+    drawPdfRouteSketch(ctx, pdfDoc, plan.waypoints, fonts);
+    if(plan.waypoints.length > 12){
+      pdfParagraph(ctx,pdfDoc, lang==='en'
+        ? 'With this many waypoints, only some are labeled with coordinates on the map to stay readable — every waypoint\u2019s exact position is listed on the previous page.'
+        : 'Με τόσα waypoints, μόνο μερικά αναγράφουν συντεταγμένες στον χάρτη για να μένει ευανάγνωστος — όλες οι ακριβείς θέσεις είναι στον πίνακα της προηγούμενης σελίδας.',
+        fonts.regular, 8, PDF_COLOR_MUTED());
+    }
+
+    // ---- ENC coverage & CATZOC ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('encTitle'), L('encSub'));
+    pdfParagraph(ctx,pdfDoc,L('encRegionsIntro'), fonts.regular, 9.5, PDF_COLOR_TEXT());
+    ctx.y -= 4;
+    const encRegions = [...new Set(plan.waypoints.map(w=>w.label))];
+    encRegions.forEach(region=>{
+      pdfParagraph(ctx,pdfDoc,'•  '+region, fonts.regular, 9.5, PDF_COLOR_TEXT());
+    });
+    ctx.y -= 6;
+    pdfTagLine(ctx,pdfDoc,fonts,L('encDisclaimer'),'warn');
+    ctx.y -= 10;
+    ctx.page.drawText(L('catzocTitle'), {x:PDF_MARGIN, y:ctx.y, size:11, font:fonts.bold, color:PDF_COLOR_HEAD()});
+    ctx.y -= 16;
+    pdfParagraph(ctx,pdfDoc,L('catzocBody'), fonts.regular, 9.5, PDF_COLOR_TEXT());
+
+    // ---- Courses & distances ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('coursesDist'), L('coursesSub'));
+    const legCols = [{label:L('leg'),w:80},{label:L('course'),w:90},{label:L('distNm'),w:110},{label:L('cumNm'),w:110}];
+    pdfTableHeader(ctx,pdfDoc,fonts,legCols);
+    let cumDist = 0;
+    for(let i=0;i<plan.waypoints.length-1;i++){
+      const a=plan.waypoints[i], b=plan.waypoints[i+1];
+      const legDist = plan.routingMode==='rhumbline' ? rhumbBearingDistance(a,b).distance : haversineNm(a,b);
+      const bearing = plan.routingMode==='rhumbline' ? ((toDeg(rhumbBearingDistance(a,b).bearing)+360)%360) : pdfInitialBearingGC(a,b);
+      cumDist += legDist;
+      pdfTableRow(ctx,pdfDoc,fonts,legCols,[`WP${i}→WP${i+1}`, bearing.toFixed(0)+'°', legDist.toFixed(1), cumDist.toFixed(1)]);
+    }
+
+    // ---- Depths & draught (UKC) ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('depthsTitle'), `${L('shipDraught')}: ${plan.draught.toFixed(1)} m`);
+    const depthCols = [{label:L('wp'),w:35},{label:L('point'),w:200},{label:L('depthCol'),w:90},{label:L('statusCol'),w:140}];
+    pdfTableHeader(ctx,pdfDoc,fonts,depthCols);
+    plan.waypoints.forEach((w,i)=>{
+      const depth = plan.depths ? plan.depths[i] : null;
+      const shallow = depth!=null && depth < plan.draught*1.1;
+      pdfTableRow(ctx,pdfDoc,fonts,depthCols,[`WP${i}`, w.label, depth!=null?depth.toFixed(0)+'m':'—', depth==null?'—':(shallow?L('shallowStatus'):L('okDepth'))], shallow?PDF_COLOR_DANGER():null);
+    });
+    ctx.y -= 6;
+    pdfParagraph(ctx,pdfDoc,L('depthNote'), fonts.regular, 8.5, PDF_COLOR_MUTED());
+    if(plan.depthsError){
+      pdfTagLine(ctx,pdfDoc,fonts,(lang==='en'?'Depth data failed to load: ':'Το βάθος δεν φορτώθηκε: ')+plan.depthsError,'warn');
+    }
+
+    // ---- Hazards & TSS ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('hazardsTitle'), L('hazardsSub'));
+    let anyHazard = false;
+    plan.waypoints.forEach((w,i)=>{
+      const note = ROUTE_NOTES.find(n=>n.nodeKey===w.key);
+      if(note){ anyHazard = true; pdfTagLine(ctx,pdfDoc,fonts,`WP${i} (${w.label}): ${note.text.replace(/&amp;/g,'&')}`, note.tag); }
+      const sm = plan.seamarks ? plan.seamarks[i] : null;
+      if(sm && sm.tss && sm.tss.length){ anyHazard=true; pdfTagLine(ctx,pdfDoc,fonts,`WP${i} (${w.label}): ${L('tssWarnText')}`, 'warn'); }
+      const depth = plan.depths ? plan.depths[i] : null;
+      if(depth!=null && depth < plan.draught*1.1){ anyHazard=true; pdfTagLine(ctx,pdfDoc,fonts,`WP${i} (${w.label}): ${L('shallowDangerText').replace('{d}', depth.toFixed(0))}`, 'danger'); }
+    });
+    if(!anyHazard) pdfParagraph(ctx,pdfDoc,L('noHazards'), fonts.regular, 10, PDF_COLOR_TEXT());
+    ctx.y -= 6;
+    pdfParagraph(ctx,pdfDoc,L('hazardsNote'), fonts.regular, 8.5, PDF_COLOR_MUTED());
+
+    // ---- Restrictions & prohibitions ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('restrictionsTitle'), L('restrictionsSub'));
+    if(plan.canalWarnings && plan.canalWarnings.length){
+      plan.canalWarnings.forEach(w=> pdfTagLine(ctx,pdfDoc,fonts, w.text.replace(/&amp;/g,'&'), w.tag==='ok'?null:w.tag));
+    } else {
+      pdfParagraph(ctx,pdfDoc,L('noCanals'), fonts.regular, 10, PDF_COLOR_TEXT());
+    }
+    ctx.y -= 8;
+    if(plan.effectiveAvoid && plan.effectiveAvoid.length){
+      pdfParagraph(ctx,pdfDoc,`${L('avoidedPassages')}: `+plan.effectiveAvoid.map(k=>NODES[k].label).join(', '), fonts.regular, 10, PDF_COLOR_WARN());
+    }
+    if(plan.avoidCouldNotApply){
+      pdfTagLine(ctx,pdfDoc,fonts,L('avoidFailed'), 'warn');
+    }
+    if(plan.policyParams && (plan.policyParams.maxSpeedKn!=null || plan.policyParams.minReservePct!=null || plan.policyParams.ecoSpeed)){
+      ctx.y -= 4;
+      if(plan.policyParams.maxSpeedKn!=null) pdfKeyValueRow(ctx,pdfDoc,fonts,L('policyMaxSpeed'), plan.policyParams.maxSpeedKn+' kn');
+      if(plan.policyParams.minReservePct!=null) pdfKeyValueRow(ctx,pdfDoc,fonts,L('policyMinReserve'), plan.policyParams.minReservePct+'%');
+      if(plan.policyParams.ecoSpeed) pdfKeyValueRow(ctx,pdfDoc,fonts,L('policyEco'), L('policyEcoVal'));
+    }
+
+    // ---- ECA/SECA & fuel changeover ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('ecaTitle'), L('ecaSub'));
+    if(plan.ecaCrossings && plan.ecaCrossings.length){
+      plan.ecaCrossings.forEach(c=>{
+        const w = plan.waypoints[c.idx];
+        const text = c.entering
+          ? `WP${c.idx} (${w.label}): ${L('ecaEnter')} ${c.to}. ${L('ecaFuelNote')}`
+          : `WP${c.idx} (${w.label}): ${L('ecaExit')} ${c.from}.`;
+        pdfTagLine(ctx,pdfDoc,fonts,text, c.entering?'warn':null);
+      });
+    } else {
+      pdfParagraph(ctx,pdfDoc,L('ecaNone'), fonts.regular, 10, PDF_COLOR_TEXT());
+    }
+    ctx.y -= 6;
+    pdfParagraph(ctx,pdfDoc,L('ecaDisclaimer'), fonts.regular, 8.5, PDF_COLOR_MUTED());
+
+    // ---- Weather, currents (tides note) ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('weatherTitle'), L('weatherSub'));
+    const wxCols = [{label:L('wp'),w:35},{label:L('wave'),w:70},{label:L('wind'),w:80},{label:L('current'),w:110},{label:L('currentDir'),w:130}];
+    pdfTableHeader(ctx,pdfDoc,fonts,wxCols);
+    plan.waypoints.forEach((w,i)=>{
+      const wx = plan.liveWeather ? plan.liveWeather[i] : null;
+      pdfTableRow(ctx,pdfDoc,fonts,wxCols,[`WP${i}`,
+        wx && wx.wave!=null ? wx.wave.toFixed(1)+'m' : '—',
+        wx && wx.windKn!=null ? wx.windKn.toFixed(0)+'kn' : '—',
+        wx && wx.currentKn!=null ? wx.currentKn.toFixed(1)+'kn' : '—',
+        wx && wx.currentDir!=null ? Math.round(wx.currentDir)+'°' : '—']);
+    });
+    ctx.y -= 6;
+    pdfParagraph(ctx,pdfDoc,L('tidesNote'), fonts.regular, 8.5, PDF_COLOR_MUTED());
+
+    // ---- Navigation aids (lighthouses) ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('navAidsTitle'), L('navAidsSub'));
+    let anyLights = false;
+    plan.waypoints.forEach((w,i)=>{
+      const sm = plan.seamarks ? plan.seamarks[i] : null;
+      if(sm && sm.lights && sm.lights.length){
+        anyLights = true;
+        const label = sm.lights.length===1 ? L('lightsFoundSingular') : L('lightsFoundPlural');
+        pdfParagraph(ctx,pdfDoc,`WP${i} (${w.label}): ${sm.lights.length} ${label}`, fonts.regular, 9.5, PDF_COLOR_TEXT());
+      }
+    });
+    if(!anyLights) pdfParagraph(ctx,pdfDoc,L('noLights'), fonts.regular, 10, PDF_COLOR_MUTED());
+    if(plan.seamarksError){
+      pdfTagLine(ctx,pdfDoc,fonts,(lang==='en'?'Lighthouse/TSS data failed to load: ':'Τα δεδομένα φάρων/TSS δεν φορτώθηκαν: ')+plan.seamarksError,'warn');
+    }
+
+    // ---- Wheel-over points & times ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('wheelOverTitle'), `${L('wheelOverSub')} ${plan.requiredSpeed.toFixed(1)} kn`);
+    const woCols = [{label:L('wp'),w:35},{label:L('point'),w:170},{label:L('cumDistCol'),w:120},{label:L('etaCol'),w:150}];
+    pdfTableHeader(ctx,pdfDoc,fonts,woCols);
+    let cum2 = 0;
+    plan.waypoints.forEach((w,i)=>{
+      if(i>0){
+        const a=plan.waypoints[i-1];
+        cum2 += plan.routingMode==='rhumbline' ? rhumbBearingDistance(a,w).distance : haversineNm(a,w);
+      }
+      const hoursIn = cum2 / plan.requiredSpeed;
+      const eta = new Date(plan.dep.getTime() + hoursIn*3600000);
+      pdfTableRow(ctx,pdfDoc,fonts,woCols,[`WP${i}`, w.label, cum2.toFixed(1), eta.toLocaleString(locale)]);
+    });
+
+    // ---- Emergency plan ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('emergencyTitle'), L('emergencySub'));
+    L('emergencySections').forEach(([title, body])=>{
+      pdfEnsureSpace(ctx,pdfDoc,20);
+      ctx.page.drawText(title, {x:PDF_MARGIN, y:ctx.y, size:11, font:fonts.bold, color:PDF_COLOR_HEAD()});
+      ctx.y -= 15;
+      pdfParagraph(ctx,pdfDoc,body,fonts.regular,9.5,PDF_COLOR_TEXT());
+      ctx.y -= 6;
+    });
+    ctx.y -= 4;
+    const attachInput = document.getElementById('attachmentFile');
+    const hasAttachment = attachInput && attachInput.files && attachInput.files[0];
+    pdfParagraph(ctx,pdfDoc, hasAttachment
+      ? L('attachmentYes').replace('{name}', attachInput.files[0].name)
+      : L('attachmentNo'),
+      fonts.regular, 9, PDF_COLOR_MUTED());
+
+    // ---- Charts & publications ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('chartsTitle'), L('chartsSub'));
+    L('chartsList').forEach(t=>{ pdfParagraph(ctx,pdfDoc,'•  '+t, fonts.regular, 10, PDF_COLOR_TEXT()); ctx.y -= 2; });
+    ctx.y -= 6;
+    pdfParagraph(ctx,pdfDoc,L('chartsNote'), fonts.regular, 9, PDF_COLOR_WARN());
+
+    // ---- Signatures ----
+    pdfPageHeader(ctx,pdfDoc,fonts,L('signOffTitle'), L('signOffSub'));
+    const signOffNames = [
+      document.getElementById('masterName').value.trim(),
+      document.getElementById('chiefOfficerName').value.trim(),
+      document.getElementById('chiefEngineerName').value.trim()
+    ];
+    const signOffDateVal = document.getElementById('signOffDate').value;
+    const signOffDateText = signOffDateVal ? new Date(signOffDateVal+'T00:00:00').toLocaleDateString(locale) : '';
+    L('sigRoles').forEach((role,idx)=>{
+      pdfEnsureSpace(ctx,pdfDoc,70);
+      ctx.page.drawText(role, {x:PDF_MARGIN, y:ctx.y, size:11, font:fonts.bold, color:PDF_COLOR_HEAD()});
+      ctx.y -= 20;
+      const nameLabel = L('nameField').split(':')[0]+':';
+      const dateLabel = L('dateField').split(':')[0]+':';
+      ctx.page.drawText(`${nameLabel} ${signOffNames[idx] || '______________________________'}`, {x:PDF_MARGIN, y:ctx.y, size:9.5, font:fonts.regular, color:PDF_COLOR_TEXT()});
+      ctx.page.drawText(`${dateLabel} ${signOffDateText || '__________________'}`, {x:PDF_MARGIN+280, y:ctx.y, size:9.5, font:fonts.regular, color:PDF_COLOR_TEXT()});
+      ctx.y -= 22;
+      ctx.page.drawText(L('sigField'), {x:PDF_MARGIN, y:ctx.y, size:9.5, font:fonts.regular, color:PDF_COLOR_TEXT()});
+      ctx.y -= 30;
+      ctx.page.drawLine({start:{x:PDF_MARGIN,y:ctx.y}, end:{x:PDF_PAGE_W-PDF_MARGIN,y:ctx.y}, thickness:0.5, color:PDF_COLOR_LINE()});
+      ctx.y -= 20;
+    });
+
+    // ---- Optional attachment (ship's emergency plan / info) ----
+    if(hasAttachment){
+      const file = attachInput.files[0];
+      try{
+        const bytes = await file.arrayBuffer();
+        if(file.type === 'application/pdf'){
+          const srcDoc = await PDFLib.PDFDocument.load(bytes);
+          const copied = await pdfDoc.copyPages(srcDoc, srcDoc.getPageIndices());
+          copied.forEach(p=>pdfDoc.addPage(p));
+        } else if(file.type.startsWith('image/')){
+          const img = file.type==='image/png' ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes);
+          const p = pdfDoc.addPage([PDF_PAGE_W, PDF_PAGE_H]);
+          const availW = PDF_PAGE_W - 2*PDF_MARGIN;
+          const scale = Math.min(availW/img.width, (PDF_PAGE_H-2*PDF_MARGIN)/img.height);
+          p.drawText(L('appendixShip'), {x:PDF_MARGIN, y:PDF_PAGE_H-PDF_MARGIN, size:12, font:fonts.bold, color:PDF_COLOR_HEAD()});
+          p.drawImage(img, {x:PDF_MARGIN, y:PDF_MARGIN, width:img.width*scale, height:img.height*scale});
+        }
+      } catch(err){
+        pdfPageHeader(ctx,pdfDoc,fonts,L('appendixTitle'), L('appendixFail'));
+      }
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], {type:'application/pdf'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `passage-plan-${plan.fromKey}-${plan.toKey}-${lang}.pdf`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    if(statusEl) statusEl.textContent = L('pdfDone') + (fonts.ok?'':L('pdfDoneNoFont'));
+  } catch(err){
+    if(statusEl) statusEl.textContent = L('pdfError') + (err && err.message ? err.message : String(err));
+  }
+}
+
+</script>
+</body>
+</html>
