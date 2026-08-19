@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -1727,9 +1728,43 @@ async function fetchLiveWeatherPoint(lat, lon){
   }
 }
 
-// Batched sea-depth lookup via the free Open Topo Data public API (GEBCO
-// bathymetry grid). One request covers every waypoint (locations are '|'-joined).
-// GEBCO elevation is negative below sea level, so depth = -elevation.
+// Batched sea-depth lookup. Primary source: Ocean Data Bank (National Science
+// and Technology Council, Taiwan) GEBCO API — a FastAPI service that
+// explicitly documents CORS support (unlike Open Topo Data, whose public CORS
+// status is unreliable — this was the actual cause of "Failed to fetch" on
+// deployed pages). Falls back to Open Topo Data if ODB is ever unreachable.
+// https://github.com/cywhale/gebco
+async function fetchBathymetryFromODB(waypoints, timeoutMs){
+  const lons = waypoints.map(w=>w.lon).join(',');
+  const lats = waypoints.map(w=>w.lat).join(',');
+  const controller = new AbortController();
+  const timer = setTimeout(()=>controller.abort(), timeoutMs);
+  try{
+    const res = await fetch(`https://api.odb.ntu.edu.tw/gebco?lon=${lons}&lat=${lats}&mode=row,point`, {signal: controller.signal});
+    if(!res.ok){
+      const bodyText = await res.text().catch(()=> '');
+      return {depths: waypoints.map(()=>null), error: `ODB HTTP ${res.status}${bodyText?': '+bodyText.slice(0,150):''}`};
+    }
+    const data = await res.json();
+    // Response shape isn't 100% pinned down from docs alone — parse defensively.
+    const records = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : (Array.isArray(data.results) ? data.results : null));
+    if(!records || records.length !== waypoints.length){
+      return {depths: waypoints.map(()=>null), error: `Unexpected ODB response shape (${records?records.length:'?'}/${waypoints.length} records)`};
+    }
+    const depths = records.map(r=>{
+      const z = (r.z!=null?r.z : (r.depth!=null?r.depth : (r.elevation!=null?r.elevation : (r.val!=null?r.val : null))));
+      return z!=null ? -z : null; // GEBCO grid value is negative below sea level
+    });
+    return {depths, error:null};
+  } catch(err){
+    const msg = (err && err.name==='AbortError') ? `ODB timeout (>${timeoutMs/1000}s)` : `ODB: ${(err && err.message) ? err.message : String(err)}`;
+    return {depths: waypoints.map(()=>null), error: msg};
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Fallback source: Open Topo Data (GEBCO grid via a different public mirror)
 async function fetchBathymetryOnce(waypoints, timeoutMs){
   const locs = waypoints.map(w=>`${w.lat},${w.lon}`).join('|');
   const controller = new AbortController();
@@ -1754,15 +1789,18 @@ async function fetchBathymetryOnce(waypoints, timeoutMs){
 }
 
 async function fetchBathymetryBatch(waypoints){
-  // First attempt, fail fast; one retry after a short pause in case it was
-  // a transient network hiccup rather than a hard block.
-  let result = await fetchBathymetryOnce(waypoints, 8000);
+  // Try the CORS-confirmed ODB source first (with one retry), then fall back
+  // to Open Topo Data (also with one retry) only if ODB is fully unreachable.
+  let result = await fetchBathymetryFromODB(waypoints, 8000);
   if(result.error){
-    await new Promise(r=>setTimeout(r, 1200));
-    const retry = await fetchBathymetryOnce(waypoints, 8000);
-    if(!retry.error) return retry;
-    // Keep the more informative of the two error messages
-    result = retry.error ? retry : result;
+    await new Promise(r=>setTimeout(r, 800));
+    const retryOdb = await fetchBathymetryFromODB(waypoints, 8000);
+    if(!retryOdb.error) return retryOdb;
+
+    const otd = await fetchBathymetryOnce(waypoints, 8000);
+    if(!otd.error) return otd;
+
+    return {depths: waypoints.map(()=>null), error: `${retryOdb.error} · Fallback also failed: ${otd.error}`};
   }
   return result;
 }
