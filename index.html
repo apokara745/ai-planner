@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -543,7 +542,7 @@ const EXTRA_NODES = {
   ecuador_coast_pt: {label:"Ανοιχτά Ισημερινού (1)",              lat:-6.0,  lon:-81.3},
   ecuador_coast2_pt:{label:"Ανοιχτά Ισημερινού (2)",              lat:-4.8,  lon:-81.3},
   colombia_coast_pt:{label:"Ανοιχτά Κολομβίας (Ειρηνικός)",       lat:0.8,   lon:-81.3},
-  oman_coast_pt:    {label:"Ανοιχτά Ομάν",                         lat:22.8,  lon:59.74},
+  oman_coast_pt:    {label:"Ανοιχτά Ομάν",                         lat:23.0,  lon:59.74},
   gulf_thailand_pt: {label:"Κόλπος Ταϊλάνδης",                     lat:1.5,   lon:104.48},
   malay_coast_pt:   {label:"Ανοιχτά Μαλαισίας (Αν.)",             lat:1.3,   lon:104.28},
   malacca_north_pt: {label:"Βόρεια Στενών Μαλάκκα",               lat:1.1,   lon:103.68},
@@ -557,7 +556,28 @@ const EXTRA_NODES = {
   bangka_strait_pt: {label:"Στενά Bangka",                         lat:0.25,  lon:103.75},
   malacca_south_pt: {label:"Νότια Στενών Μαλάκκα",                lat:2.25,  lon:102.0},
   dover_pt:         {label:"Στενά Dover (1)",                      lat:51.3,  lon:1.5},
-  dover2_pt:        {label:"Στενά Dover (2)",                      lat:50.85, lon:1.2}
+  dover2_pt:        {label:"Στενά Dover (2)",                      lat:50.85, lon:1.2},
+  gibraltar_offshore_pt:{label:"Ανοιχτά Γιβραλτάρ",                lat:36.0,  lon:-5.5},
+  colombo_offshore_pt:{label:"Ανοιχτά Colombo",                    lat:6.8,   lon:79.8},
+  chennai_offshore_pt:{label:"Ανοιχτά Chennai",                    lat:13.1,  lon:80.5},
+  srilanka_south_pt:{label:"Νότια Σρι Λάνκα",                      lat:4.1,   lon:78.4},
+  bangka_mid_pt:    {label:"Στενά Bangka (μέσο 1)",                lat:0.67,  lon:103.3},
+  bangka_mid2_pt:   {label:"Στενά Bangka (μέσο 2)",                lat:1.71,  lon:102.66},
+  aden_mid_pt:      {label:"Κεντρικός Κόλπος Άντεν",               lat:11.5,  lon:54.6},
+  brazil_offshore1_pt:{label:"Ανοιχτά Βραζιλίας (1)",             lat:-23.2, lon:-42.4},
+  brazil_offshore2_pt:{label:"Ανοιχτά Βραζιλίας (2)",             lat:-24.0, lon:-45.6},
+  brazil_offshore3_pt:{label:"Ανοιχτά Βραζιλίας (3)",             lat:-24.0, lon:-46.0},
+  melbourne_offshore_pt:{label:"Ανοιχτά Melbourne",                lat:-39.0, lon:144.0},
+  indian_pacific_pt:{label:"Νότιος Ινδικός/Ειρηνικός",             lat:-35.0, lon:105.0},
+  ningbo_offshore_pt:{label:"Ανοιχτά Ningbo",                      lat:29.8,  lon:122.5},
+  qingdao_offshore_pt:{label:"Ανοιχτά Qingdao",                    lat:35.9,  lon:120.7},
+  singapore_offshore_pt:{label:"Ανοιχτά Σιγκαπούρης",              lat:1.2,   lon:103.7},
+  malacca_strait_mid_pt:{label:"Στενά Μαλάκκα (μέσο)",             lat:1.39,  lon:103.4},
+  malacca_strait_mid2_pt:{label:"Στενά Μαλάκκα (μέσο 2)",          lat:1.29,  lon:103.4},
+  riau_mid_pt:      {label:"Νήσοι Riau (μέσο)",                     lat:1.16,  lon:103.4},
+  bangka_strait_mid_pt:{label:"Στενά Bangka (αρχή)",               lat:0.31,  lon:103.75},
+  bangka_mid3_pt:   {label:"Στενά Bangka (μέσο 3)",                 lat:1.63,  lon:102.75},
+  srilanka_se_pt:   {label:"ΝΑ Σρι Λάνκα",                         lat:4.6,   lon:78.6}
 };
 
 const NODES = {...PORTS, ...EXTRA_NODES};
@@ -566,34 +586,35 @@ const NODES = {...PORTS, ...EXTRA_NODES};
 // The router only ever travels along these edges, so it can't cut across land.
 const EDGES = [
   ["rotterdam","north_sea_pt"], ["north_sea_pt","english_channel"], ["english_channel","ushant_pt"], ["ushant_pt","bay_of_biscay"],
-  ["bay_of_biscay","galicia_pt"], ["galicia_pt","lisbon_pt"], ["lisbon_pt","cape_stvincent_pt"], ["cape_stvincent_pt","gibraltar"],
+  ["bay_of_biscay","galicia_pt"], ["galicia_pt","lisbon_pt"], ["lisbon_pt","cape_stvincent_pt"], ["cape_stvincent_pt","gibraltar_offshore_pt"], ["gibraltar_offshore_pt","gibraltar"],
   ["gibraltar","med_west_pt"], ["med_west_pt","balearic_pt"], ["balearic_pt","sicily_channel_pt"], ["sicily_channel_pt","med_mid"],
   ["med_mid","s_peloponnese_pt"], ["s_peloponnese_pt","piraeus"], ["med_mid","suez_north"], ["suez_north","suez"],
   ["suez","bab_el_mandeb"], ["bab_el_mandeb","gulf_aden_mid"],
-  ["gulf_aden_mid","socotra_pass"], ["socotra_pass","arabian_sea_mid"],
+  ["gulf_aden_mid","aden_mid_pt"], ["aden_mid_pt","socotra_pass"], ["socotra_pass","arabian_sea_mid"],
   ["arabian_sea_mid","oman_coast_pt"], ["oman_coast_pt","fujairah"],
   ["arabian_sea_mid","mumbai"], ["arabian_sea_mid","indian_ocean_mid"],
   ["indian_ocean_mid","malacca"], ["indian_ocean_mid","madagascar_pt"], ["madagascar_pt","durban"],
-  ["malacca","singapore"], ["singapore","scs_open_pt"], ["scs_open_pt","philippines_pt"],
+  ["malacca","malacca_strait_mid_pt"], ["malacca_strait_mid_pt","malacca_strait_mid2_pt"], ["malacca_strait_mid2_pt","singapore_offshore_pt"], ["singapore_offshore_pt","singapore"], ["singapore","scs_open_pt"], ["scs_open_pt","philippines_pt"],
   ["philippines_pt","taiwan_east_pt"], ["taiwan_east_pt","eastchina_pt"], ["eastchina_pt","shanghai_offshore_pt"], ["shanghai_offshore_pt","shanghai"],
   ["bay_of_biscay","mid_atlantic_n"], ["mid_atlantic_n","mid_atlantic_s"],
   ["mid_atlantic_n","antilles_south_pt"], ["antilles_south_pt","caribbean_mid"], ["caribbean_mid","panama_atl"],
   ["caribbean_mid","sw_caribbean_pt"], ["sw_caribbean_pt","yucatan_pt"], ["yucatan_pt","gulf_mid_pt"], ["gulf_mid_pt","houston_offshore_pt"], ["houston_offshore_pt","houston"],
   ["panama_atl","panama"], ["panama","panama_pac"],
-  ["panama_pac","pacific_mid"], ["pacific_mid","shanghai"], ["pacific_mid","singapore"],
-  ["mid_atlantic_s","santos"], ["mid_atlantic_s","cape_good_hope"], ["cape_good_hope","agulhas_bank_pt"],
+  ["panama_pac","pacific_mid"], ["pacific_mid","shanghai"],
+  ["mid_atlantic_s","brazil_offshore1_pt"], ["brazil_offshore1_pt","brazil_offshore2_pt"], ["brazil_offshore2_pt","brazil_offshore3_pt"], ["brazil_offshore3_pt","santos"],
+  ["mid_atlantic_s","cape_good_hope"], ["cape_good_hope","agulhas_bank_pt"],
   ["agulhas_bank_pt","algoa_pt"], ["algoa_pt","transkei_pt"], ["transkei_pt","natal_pt"], ["natal_pt","durban"],
 
-  ["ningbo","shanghai"], ["shenzhen","scs_south_pt"], ["scs_south_pt","riau_pt"], ["riau_pt","riau2_pt"], ["riau2_pt","malacca_east_pt"], ["malacca_east_pt","malacca"],
+  ["ningbo","ningbo_offshore_pt"], ["ningbo_offshore_pt","shanghai_offshore_pt"], ["shenzhen","scs_south_pt"], ["scs_south_pt","riau_pt"], ["riau_pt","riau2_pt"], ["riau2_pt","riau_mid_pt"], ["riau_mid_pt","malacca_east_pt"], ["malacca_east_pt","malacca"],
   ["guangzhou","shenzhen"],
-  ["hongkong","shenzhen"], ["qingdao","shanghai"], ["tianjin","bohai_pt"], ["bohai_pt","yellowsea_pt"], ["yellowsea_pt","shandong_pt"], ["shandong_pt","qingdao"],
+  ["hongkong","shenzhen"], ["qingdao","qingdao_offshore_pt"], ["qingdao_offshore_pt","shanghai_offshore_pt"], ["tianjin","bohai_pt"], ["bohai_pt","yellowsea_pt"], ["yellowsea_pt","shandong_pt"], ["shandong_pt","qingdao"],
   ["dalian","tianjin"], ["busan","shanghai"],
   ["xiamen","fujian_coast_pt"], ["fujian_coast_pt","taiwanstrait_pt"], ["taiwanstrait_pt","zhejiang_coast_pt"], ["zhejiang_coast_pt","shanghai_offshore_pt"],
   ["kaohsiung","xiamen"], ["portklang","malacca"], ["tanjungpelepas","singapore"],
   ["laemchabang","gulf_thailand_pt"], ["gulf_thailand_pt","malay_coast_pt"], ["malay_coast_pt","malacca_north_pt"], ["malacca_north_pt","malacca"],
-  ["jakarta","sumatra_coast_pt"], ["sumatra_coast_pt","java_sea_pt"], ["java_sea_pt","karimata_pt"], ["karimata_pt","bangka_strait_pt"], ["bangka_strait_pt","malacca_south_pt"], ["malacca_south_pt","malacca"], ["caimep","singapore"],
-  ["manila","hongkong"], ["colombo","indian_ocean_mid"], ["colombo","arabian_sea_mid"],
-  ["nhavasheva","mumbai"], ["mundra","arabian_sea_mid"], ["chennai","indian_ocean_mid"],
+  ["jakarta","sumatra_coast_pt"], ["sumatra_coast_pt","java_sea_pt"], ["java_sea_pt","karimata_pt"], ["karimata_pt","bangka_strait_pt"], ["bangka_strait_pt","bangka_strait_mid_pt"], ["bangka_strait_mid_pt","bangka_mid_pt"], ["bangka_mid_pt","bangka_mid3_pt"], ["bangka_mid3_pt","bangka_mid2_pt"], ["bangka_mid2_pt","malacca_south_pt"], ["malacca_south_pt","malacca"], ["caimep","singapore"],
+  ["manila","hongkong"], ["colombo","indian_ocean_mid"], ["colombo","colombo_offshore_pt"], ["colombo_offshore_pt","arabian_sea_mid"],
+  ["nhavasheva","mumbai"], ["mundra","arabian_sea_mid"], ["chennai","chennai_offshore_pt"], ["chennai_offshore_pt","srilanka_se_pt"], ["srilanka_se_pt","srilanka_south_pt"], ["srilanka_south_pt","indian_ocean_mid"],
   ["jebelali","fujairah"], ["jeddah","bab_el_mandeb"], ["antwerp","rotterdam"],
   ["hamburg","german_bight_pt"], ["german_bight_pt","wadden_sea_pt"], ["wadden_sea_pt","rotterdam"],
   ["valencia","spain_med_coast_pt"], ["spain_med_coast_pt","alicante_pt"], ["alicante_pt","alboran_west_pt"], ["alboran_west_pt","gibraltar"],
@@ -604,7 +625,7 @@ const EDGES = [
   ["newyork","mid_atlantic_n"], ["savannah","mid_atlantic_n"], ["vancouver","pacific_mid"],
   ["cartagena","caribbean_mid"],
   ["callao","peru_coast_pt"], ["peru_coast_pt","ecuador_coast_pt"], ["ecuador_coast_pt","ecuador_coast2_pt"], ["ecuador_coast2_pt","colombia_coast_pt"], ["colombia_coast_pt","panama_pac"],
-  ["melbourne","indian_ocean_mid"], ["melbourne","pacific_mid"]
+  ["melbourne","melbourne_offshore_pt"], ["melbourne_offshore_pt","indian_pacific_pt"], ["indian_pacific_pt","indian_ocean_mid"], ["melbourne","pacific_mid"]
 ];
 
 // Chokepoints the person is allowed to ask to avoid (deliberately excludes
@@ -1746,14 +1767,13 @@ async function fetchBathymetryFromODB(waypoints, timeoutMs){
       return {depths: waypoints.map(()=>null), error: `ODB HTTP ${res.status}${bodyText?': '+bodyText.slice(0,150):''}`};
     }
     const data = await res.json();
-    // Response shape isn't 100% pinned down from docs alone — parse defensively.
     const records = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : (Array.isArray(data.results) ? data.results : null));
     if(!records || records.length !== waypoints.length){
       return {depths: waypoints.map(()=>null), error: `Unexpected ODB response shape (${records?records.length:'?'}/${waypoints.length} records)`};
     }
     const depths = records.map(r=>{
       const z = (r.z!=null?r.z : (r.depth!=null?r.depth : (r.elevation!=null?r.elevation : (r.val!=null?r.val : null))));
-      return z!=null ? -z : null; // GEBCO grid value is negative below sea level
+      return z!=null ? -z : null;
     });
     return {depths, error:null};
   } catch(err){
