@@ -577,7 +577,33 @@ const EXTRA_NODES = {
   riau_mid_pt:      {label:"Νήσοι Riau (μέσο)",                     lat:1.16,  lon:103.4},
   bangka_strait_mid_pt:{label:"Στενά Bangka (αρχή)",               lat:0.31,  lon:103.75},
   bangka_mid3_pt:   {label:"Στενά Bangka (μέσο 3)",                 lat:1.63,  lon:102.75},
-  srilanka_se_pt:   {label:"ΝΑ Σρι Λάνκα",                         lat:4.6,   lon:78.6}
+  srilanka_se_pt:   {label:"ΝΑ Σρι Λάνκα",                         lat:4.6,   lon:78.6},
+
+  // --- v46: νέοι κόμβοι για διόρθωση διασχίσεων ξηράς (βλ. route_check.py) ---
+  gulf_suez1_pt:    {label:"Κόλπος Σουέζ (1)",                      lat:29.5,  lon:32.6},
+  gulf_suez2_pt:    {label:"Κόλπος Σουέζ (2)",                      lat:29.0,  lon:32.8},
+  gulf_suez3_pt:    {label:"Κόλπος Σουέζ (3)",                      lat:28.5,  lon:33.1},
+  gulf_suez4_pt:    {label:"Κόλπος Σουέζ (4)",                      lat:28.0,  lon:33.6},
+  red_sea_n:        {label:"Βόρεια Ερυθρά Θάλασσα",                 lat:27.8,  lon:33.6},
+  red_sea_mid:      {label:"Κεντρική Ερυθρά Θάλασσα",               lat:20.0,  lon:38.2},
+  red_sea_s:        {label:"Νότια Ερυθρά Θάλασσα",                  lat:15.2,  lon:41.6},
+  andaman_pt:       {label:"Θάλασσα Andaman",                       lat:6.8,   lon:94.2},
+  sumatra_nw_pt:    {label:"ΒΔ ακτή Σουμάτρας",                     lat:5.3,   lon:98.3},
+  malacca_north_entry_pt:{label:"Βόρεια είσοδος Στενών Μαλάκκα",    lat:3.2,   lon:100.1},
+  persian_gulf_mid_pt:{label:"Κεντρικός Περσικός Κόλπος",           lat:26.0,  lon:54.0},
+  hormuz_pt:        {label:"Στενά Ορμούζ",                          lat:26.45, lon:56.75},
+  gulf_oman_entry_pt:{label:"Είσοδος Κόλπου Ομάν",                  lat:25.5,  lon:57.5},
+  scs_approach_pt:  {label:"Στενά Σιγκαπούρης (ανατολικά)",         lat:1.25,  lon:104.5},
+  scs_approach2_pt: {label:"Προσέγγιση Νότιας Θάλασσας Κίνας",      lat:3.0,   lon:107.0},
+  panama_pac_pt:    {label:"Ανοιχτά Παναμά (κοντά ακτή)",           lat:8.3,   lon:-78.95},
+  panama_coast_pt:  {label:"Ακτή Παναμά (Ειρηνική)",                lat:7.2,   lon:-78.9},
+  panama_offshore2_pt:{label:"Ανοιχτά Παναμά (2)",                  lat:6.3,   lon:-79.5},
+  panama_pac_offshore:{label:"Ανοιχτά Παναμά (Ειρηνική, βαθιά)",    lat:6.0,   lon:-82.5},
+  port_phillip_heads_pt:{label:"Port Phillip Heads (Melbourne)",    lat:-38.3, lon:144.65},
+  bass_strait_pt:   {label:"Στενά Bass",                            lat:-39.5, lon:145.0},
+  tasman_sea_pt:    {label:"Θάλασσα Tasman",                        lat:-39.5, lon:151.0},
+  coral_sea_pt:     {label:"Θάλασσα Coral (1)",                     lat:-22.0, lon:162.0},
+  coral_sea_ne_pt:  {label:"Θάλασσα Coral (2)",                     lat:-12.0, lon:168.0}
 };
 
 const NODES = {...PORTS, ...EXTRA_NODES};
@@ -589,18 +615,18 @@ const EDGES = [
   ["bay_of_biscay","galicia_pt"], ["galicia_pt","lisbon_pt"], ["lisbon_pt","cape_stvincent_pt"], ["cape_stvincent_pt","gibraltar_offshore_pt"], ["gibraltar_offshore_pt","gibraltar"],
   ["gibraltar","med_west_pt"], ["med_west_pt","balearic_pt"], ["balearic_pt","sicily_channel_pt"], ["sicily_channel_pt","med_mid"],
   ["med_mid","s_peloponnese_pt"], ["s_peloponnese_pt","piraeus"], ["med_mid","suez_north"], ["suez_north","suez"],
-  ["suez","bab_el_mandeb"], ["bab_el_mandeb","gulf_aden_mid"],
+  ["suez","gulf_suez1_pt"], ["gulf_suez1_pt","gulf_suez2_pt"], ["gulf_suez2_pt","gulf_suez3_pt"], ["gulf_suez3_pt","gulf_suez4_pt"], ["gulf_suez4_pt","red_sea_n"], ["red_sea_n","red_sea_mid"], ["red_sea_mid","red_sea_s"], ["red_sea_s","bab_el_mandeb"], ["bab_el_mandeb","gulf_aden_mid"],
   ["gulf_aden_mid","aden_mid_pt"], ["aden_mid_pt","socotra_pass"], ["socotra_pass","arabian_sea_mid"],
   ["arabian_sea_mid","oman_coast_pt"], ["oman_coast_pt","fujairah"],
   ["arabian_sea_mid","mumbai"], ["arabian_sea_mid","indian_ocean_mid"],
-  ["indian_ocean_mid","malacca"], ["indian_ocean_mid","madagascar_pt"], ["madagascar_pt","durban"],
-  ["malacca","malacca_strait_mid_pt"], ["malacca_strait_mid_pt","malacca_strait_mid2_pt"], ["malacca_strait_mid2_pt","singapore_offshore_pt"], ["singapore_offshore_pt","singapore"], ["singapore","scs_open_pt"], ["scs_open_pt","philippines_pt"],
+  ["indian_ocean_mid","andaman_pt"], ["andaman_pt","sumatra_nw_pt"], ["sumatra_nw_pt","malacca_north_entry_pt"], ["malacca_north_entry_pt","malacca"], ["indian_ocean_mid","madagascar_pt"], ["madagascar_pt","durban"],
+  ["malacca","malacca_strait_mid_pt"], ["malacca_strait_mid_pt","malacca_strait_mid2_pt"], ["malacca_strait_mid2_pt","singapore_offshore_pt"], ["singapore_offshore_pt","singapore"], ["singapore","scs_approach_pt"], ["scs_approach_pt","scs_approach2_pt"], ["scs_approach2_pt","scs_open_pt"], ["scs_open_pt","philippines_pt"],
   ["philippines_pt","taiwan_east_pt"], ["taiwan_east_pt","eastchina_pt"], ["eastchina_pt","shanghai_offshore_pt"], ["shanghai_offshore_pt","shanghai"],
   ["bay_of_biscay","mid_atlantic_n"], ["mid_atlantic_n","mid_atlantic_s"],
   ["mid_atlantic_n","antilles_south_pt"], ["antilles_south_pt","caribbean_mid"], ["caribbean_mid","panama_atl"],
   ["caribbean_mid","sw_caribbean_pt"], ["sw_caribbean_pt","yucatan_pt"], ["yucatan_pt","gulf_mid_pt"], ["gulf_mid_pt","houston_offshore_pt"], ["houston_offshore_pt","houston"],
   ["panama_atl","panama"], ["panama","panama_pac"],
-  ["panama_pac","pacific_mid"], ["pacific_mid","shanghai"],
+  ["panama_pac","panama_pac_pt"], ["panama_pac_pt","panama_coast_pt"], ["panama_coast_pt","panama_offshore2_pt"], ["panama_offshore2_pt","panama_pac_offshore"], ["panama_pac_offshore","pacific_mid"], ["pacific_mid","shanghai"],
   ["mid_atlantic_s","brazil_offshore1_pt"], ["brazil_offshore1_pt","brazil_offshore2_pt"], ["brazil_offshore2_pt","brazil_offshore3_pt"], ["brazil_offshore3_pt","santos"],
   ["mid_atlantic_s","cape_good_hope"], ["cape_good_hope","agulhas_bank_pt"],
   ["agulhas_bank_pt","algoa_pt"], ["algoa_pt","transkei_pt"], ["transkei_pt","natal_pt"], ["natal_pt","durban"],
@@ -615,7 +641,7 @@ const EDGES = [
   ["jakarta","sumatra_coast_pt"], ["sumatra_coast_pt","java_sea_pt"], ["java_sea_pt","karimata_pt"], ["karimata_pt","bangka_strait_pt"], ["bangka_strait_pt","bangka_strait_mid_pt"], ["bangka_strait_mid_pt","bangka_mid_pt"], ["bangka_mid_pt","bangka_mid3_pt"], ["bangka_mid3_pt","bangka_mid2_pt"], ["bangka_mid2_pt","malacca_south_pt"], ["malacca_south_pt","malacca"], ["caimep","singapore"],
   ["manila","hongkong"], ["colombo","indian_ocean_mid"], ["colombo","colombo_offshore_pt"], ["colombo_offshore_pt","arabian_sea_mid"],
   ["nhavasheva","mumbai"], ["mundra","arabian_sea_mid"], ["chennai","chennai_offshore_pt"], ["chennai_offshore_pt","srilanka_se_pt"], ["srilanka_se_pt","srilanka_south_pt"], ["srilanka_south_pt","indian_ocean_mid"],
-  ["jebelali","fujairah"], ["jeddah","bab_el_mandeb"], ["antwerp","rotterdam"],
+  ["jebelali","persian_gulf_mid_pt"], ["persian_gulf_mid_pt","hormuz_pt"], ["hormuz_pt","gulf_oman_entry_pt"], ["gulf_oman_entry_pt","fujairah"], ["gulf_oman_entry_pt","oman_coast_pt"], ["jeddah","bab_el_mandeb"], ["antwerp","rotterdam"],
   ["hamburg","german_bight_pt"], ["german_bight_pt","wadden_sea_pt"], ["wadden_sea_pt","rotterdam"],
   ["valencia","spain_med_coast_pt"], ["spain_med_coast_pt","alicante_pt"], ["alicante_pt","alboran_west_pt"], ["alboran_west_pt","gibraltar"],
   ["algeciras","gibraltar"],
@@ -625,7 +651,7 @@ const EDGES = [
   ["newyork","mid_atlantic_n"], ["savannah","mid_atlantic_n"], ["vancouver","pacific_mid"],
   ["cartagena","caribbean_mid"],
   ["callao","peru_coast_pt"], ["peru_coast_pt","ecuador_coast_pt"], ["ecuador_coast_pt","ecuador_coast2_pt"], ["ecuador_coast2_pt","colombia_coast_pt"], ["colombia_coast_pt","panama_pac"],
-  ["melbourne","melbourne_offshore_pt"], ["melbourne_offshore_pt","indian_pacific_pt"], ["indian_pacific_pt","indian_ocean_mid"], ["melbourne","pacific_mid"]
+  ["melbourne","port_phillip_heads_pt"], ["port_phillip_heads_pt","melbourne_offshore_pt"], ["melbourne_offshore_pt","indian_pacific_pt"], ["indian_pacific_pt","indian_ocean_mid"], ["melbourne_offshore_pt","bass_strait_pt"], ["bass_strait_pt","tasman_sea_pt"], ["tasman_sea_pt","coral_sea_pt"], ["coral_sea_pt","coral_sea_ne_pt"], ["coral_sea_ne_pt","pacific_mid"]
 ];
 
 // Chokepoints the person is allowed to ask to avoid (deliberately excludes
@@ -1851,13 +1877,13 @@ async function fetchSeamarksBatch(waypoints){
     `node(around:15000,${w.lat},${w.lon})["seamark:type"~"^(light_major|light_minor|light)$"];`+
     `way(around:15000,${w.lat},${w.lon})["seamark:type"~"^(separation_zone|separation_lane|separation_line|separation_boundary)$"];`
   ).join('');
-  const query = `[out:json][timeout:20];(${clauses});out center;`;
+  const query = `[out:json][timeout:25];(${clauses});out center;`;
 
   let lastError = null;
   for(const endpoint of OVERPASS_MIRRORS){
     try{
       const controller = new AbortController();
-      const timer = setTimeout(()=>controller.abort(), 12000); // fail fast instead of waiting out a slow/504 mirror
+      const timer = setTimeout(()=>controller.abort(), 30000); // give the server's own [timeout:25] room to actually finish before we give up on it
       let res;
       try{
         res = await fetch(endpoint, {method:'POST', body: query, signal: controller.signal});
