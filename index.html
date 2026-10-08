@@ -48,6 +48,7 @@
   }
   input:focus, select:focus, textarea:focus{outline:none; border-color:var(--teal);}
   .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  #engineDetails .row2{align-items:end;}
   textarea{resize:vertical; min-height:50px;}
   button{
     margin-top:20px; width:100%; background:var(--teal); color:var(--navy-950); border:none;
@@ -187,19 +188,42 @@
         <option value="mr">MR / Product tanker</option>
       </select>
 
+      <label data-i18n="loadStateLabel">Κατάσταση φόρτωσης</label>
+      <select id="loadState">
+        <option value="laden" data-i18n="laden">Φορτωμένο (laden)</option>
+        <option value="ballast" data-i18n="ballast">Με έρμα (ballast)</option>
+      </select>
+
       <div class="row2">
         <div>
-          <label data-i18n="fuelAvailableLabel">Διαθέσιμα καύσιμα (MT)</label>
-          <input type="number" id="fuel" value="450">
+          <label data-i18n="fuelAvailableLabel">ROB VLSFO αναχώρησης (MT)</label>
+          <input type="number" id="fuel" value="2500" min="0">
         </div>
         <div>
-          <label data-i18n="loadStateLabel">Κατάσταση φόρτωσης</label>
-          <select id="loadState">
-            <option value="laden" data-i18n="laden">Φορτωμένο (laden)</option>
-            <option value="ballast" data-i18n="ballast">Με έρμα (ballast)</option>
-          </select>
+          <label data-i18n="fuelMgoLabel">ROB MGO αναχώρησης (MT)</label>
+          <input type="number" id="fuelMgo" value="200" min="0">
         </div>
       </div>
+
+      <details id="engineDetails" style="margin-top:14px; border:1px solid var(--line); border-radius:6px; padding:8px 10px;">
+        <summary style="cursor:pointer; font-size:12px; color:var(--muted);" data-i18n="engineDataSummary">Στοιχεία μηχανής &amp; κατανάλωσης (ενδεικτικά ανά τύπο — άλλαξέ τα με τα στοιχεία του πλοίου)</summary>
+        <div class="row2">
+          <div><label data-i18n="engServiceSpeedLabel">Service speed (kn)</label><input type="number" step="0.1" id="engServiceSpeed"></div>
+          <div><label data-i18n="engMeConsLabel">Κ/Μ στο service speed, laden (MT/ημ.)</label><input type="number" step="0.1" id="engMeCons"></div>
+        </div>
+        <div class="row2">
+          <div><label data-i18n="engMcrLabel">MCR κύριας μηχανής (kW)</label><input type="number" step="100" id="engMcr"></div>
+          <div><label data-i18n="engMinLoadLabel">Ελάχιστο συνεχές φορτίο Κ/Μ (% MCR)</label><input type="number" step="1" id="engMinLoad"></div>
+        </div>
+        <div class="row2">
+          <div><label data-i18n="engAuxSeaLabel">Γεννήτριες στη θάλασσα (MT/ημ.)</label><input type="number" step="0.1" id="engAuxSea"></div>
+          <div><label data-i18n="engAuxIdleLabel">Γεννήτριες στο αγκυροβόλιο (MT/ημ.)</label><input type="number" step="0.1" id="engAuxIdle"></div>
+        </div>
+        <div class="row2">
+          <div><label data-i18n="engBoilerIdleLabel">Λέβητας στο αγκυροβόλιο (MT/ημ.)</label><input type="number" step="0.1" id="engBoilerIdle"></div>
+          <div><label data-i18n="engWeatherMarginLabel">Περιθώριο καιρού (%)</label><input type="number" step="1" id="engWeatherMargin"></div>
+        </div>
+      </details>
 
       <label data-i18n="routingCommandLabel">Εντολή δρομολόγησης (προαιρετικό)</label>
       <input type="text" id="routingCommand" data-i18n-ph="routingCommandPh" placeholder="π.χ. μην περάσεις από τη Διώρυγα Σουέζ">
@@ -309,7 +333,12 @@ const I18N = {
     routingModeLabel: 'Τρόπος πλεύσης', greatCircle: 'Ορθοδρομία (great circle)', rhumbLine: 'Λοξοδρομία (rhumb line)',
     depTimeLabel: 'Ημ/νία &amp; ώρα αναχώρησης', arrTimeLabel: 'Επιθυμητή ώρα άφιξης',
     shipTypeLabel: 'Τύπος δεξαμενόπλοιου',
-    fuelAvailableLabel: 'Διαθέσιμα καύσιμα (MT)', loadStateLabel: 'Κατάσταση φόρτωσης',
+    fuelAvailableLabel: 'ROB VLSFO αναχώρησης (MT)', fuelMgoLabel: 'ROB MGO αναχώρησης (MT)', loadStateLabel: 'Κατάσταση φόρτωσης',
+    engineDataSummary: 'Στοιχεία μηχανής &amp; κατανάλωσης (ενδεικτικά ανά τύπο — άλλαξέ τα με τα στοιχεία του πλοίου)',
+    engServiceSpeedLabel: 'Service speed (kn)', engMeConsLabel: 'Κ/Μ στο service speed, laden (MT/ημ.)',
+    engMcrLabel: 'MCR κύριας μηχανής (kW)', engMinLoadLabel: 'Ελάχιστο συνεχές φορτίο Κ/Μ (% MCR)',
+    engAuxSeaLabel: 'Γεννήτριες στη θάλασσα (MT/ημ.)', engAuxIdleLabel: 'Γεννήτριες στο αγκυροβόλιο (MT/ημ.)',
+    engBoilerIdleLabel: 'Λέβητας στο αγκυροβόλιο (MT/ημ.)', engWeatherMarginLabel: 'Περιθώριο καιρού (%)',
     laden: 'Φορτωμένο (laden)', ballast: 'Με έρμα (ballast)',
     routingCommandLabel: 'Εντολή δρομολόγησης (προαιρετικό)', routingCommandPh: 'π.χ. μην περάσεις από τη Διώρυγα Σουέζ',
     policyLabel: 'Πολιτική εταιρίας', policyManualHint: 'Ή γράψε χειροκίνητα (αν δεν έχεις αρχείο):',
@@ -346,7 +375,12 @@ const I18N = {
     routingModeLabel: 'Course type', greatCircle: 'Great circle', rhumbLine: 'Rhumb line',
     depTimeLabel: 'Departure date &amp; time', arrTimeLabel: 'Desired arrival time',
     shipTypeLabel: 'Tanker type',
-    fuelAvailableLabel: 'Fuel available (MT)', loadStateLabel: 'Load condition',
+    fuelAvailableLabel: 'VLSFO ROB at departure (MT)', fuelMgoLabel: 'MGO ROB at departure (MT)', loadStateLabel: 'Load condition',
+    engineDataSummary: 'Engine &amp; consumption data (indicative per class — replace with the ship\'s own data)',
+    engServiceSpeedLabel: 'Service speed (kn)', engMeConsLabel: 'M/E at service speed, laden (MT/day)',
+    engMcrLabel: 'Main engine MCR (kW)', engMinLoadLabel: 'M/E minimum continuous load (% MCR)',
+    engAuxSeaLabel: 'Generators at sea (MT/day)', engAuxIdleLabel: 'Generators at anchor (MT/day)',
+    engBoilerIdleLabel: 'Boiler at anchor (MT/day)', engWeatherMarginLabel: 'Weather margin (%)',
     laden: 'Laden', ballast: 'Ballast',
     routingCommandLabel: 'Routing command (optional)', routingCommandPh: 'e.g. avoid the Suez Canal',
     policyLabel: 'Company policy', policyManualHint: 'Or type it manually (if you have no file):',
@@ -397,6 +431,17 @@ function validateVoyageInputs(){
   if(!isFiniteInRange(air, 0, 100)) errors.push('Συμπλήρωσε έγκυρο air draught (0–100 m).');
   if(!isFiniteInRange(fuel, 0, 20000)) errors.push('Συμπλήρωσε έγκυρη διαθέσιμη ποσότητα καυσίμου.');
   if(imo && !/^\d{7}$/.test(imo)) errors.push('Το IMO πρέπει να έχει 7 ψηφία, αν συμπληρωθεί.');
+  const mgo=parseFloat(document.getElementById('fuelMgo').value);
+  if(!isFiniteInRange(mgo, 0, 20000)) errors.push('Συμπλήρωσε έγκυρο ROB MGO.');
+  const eng=(id,min,max,msg)=>{ const v=parseFloat(document.getElementById(id).value); if(!isFiniteInRange(v,min,max)) errors.push(msg); };
+  eng('engServiceSpeed', 5, 30, 'Service speed: 5–30 kn.');
+  eng('engMeCons', 1, 400, 'Κατανάλωση Κ/Μ στο service speed: 1–400 MT/ημ.');
+  eng('engMcr', 500, 100000, 'MCR: 500–100.000 kW.');
+  eng('engMinLoad', 5, 60, 'Ελάχιστο φορτίο Κ/Μ: 5–60% MCR.');
+  eng('engAuxSea', 0, 50, 'Γεννήτριες στη θάλασσα: 0–50 MT/ημ.');
+  eng('engAuxIdle', 0, 50, 'Γεννήτριες στο αγκυροβόλιο: 0–50 MT/ημ.');
+  eng('engBoilerIdle', 0, 50, 'Λέβητας: 0–50 MT/ημ.');
+  eng('engWeatherMargin', 0, 50, 'Περιθώριο καιρού: 0–50%.');
   return errors;
 }
 
@@ -498,13 +543,22 @@ const PORTS = {
 // Typical service speed (kn), daily fuel consumption (MT/day) at service speed,
 // and typical laden draught (m), by tanker class.
 // TODO: replace with real ship particulars from a fleet/vessel database (per-vessel, not per-class)
+// Engine data per class (INDICATIVE class values, not a specific ship):
+//  dailyFuelAtService = main engine MT/day, laden, calm water, at serviceSpeed
+//  mcrKw = main engine MCR · serviceLoad = engine load (fraction of MCR) at that point
+//  auxSea / auxIdle = diesel generators MT/day at sea / at anchor
+//  boilerIdle = oil-fired auxiliary boiler MT/day at anchor (at sea the exhaust-gas
+//  economiser covers steam demand until the main engine load gets low)
+// The chief engineer replaces these with the ship's shop-test / sea-trial data
+// (they are editable in the form, under "Engine & fuel data").
 const SHIP_PROFILES = {
-  vlcc:     {label:"VLCC",               serviceSpeed:15,   dailyFuelAtService:85, typicalDraught:22.0},
-  suezmax:  {label:"Suezmax",            serviceSpeed:15,   dailyFuelAtService:55, typicalDraught:16.5},
-  aframax:  {label:"Aframax",            serviceSpeed:14.5, dailyFuelAtService:40, typicalDraught:14.5},
-  panamax:  {label:"Panamax tanker",     serviceSpeed:14,   dailyFuelAtService:35, typicalDraught:12.0},
-  mr:       {label:"MR / Product tanker",serviceSpeed:14,   dailyFuelAtService:25, typicalDraught:11.0}
+  vlcc:     {label:"VLCC",               serviceSpeed:15,   dailyFuelAtService:85, typicalDraught:22.0, mcrKw:25000, serviceLoad:0.75, auxSea:5.0, auxIdle:4.0, boilerIdle:3.0},
+  suezmax:  {label:"Suezmax",            serviceSpeed:15,   dailyFuelAtService:55, typicalDraught:16.5, mcrKw:17000, serviceLoad:0.75, auxSea:4.0, auxIdle:3.5, boilerIdle:2.5},
+  aframax:  {label:"Aframax",            serviceSpeed:14.5, dailyFuelAtService:40, typicalDraught:14.5, mcrKw:12500, serviceLoad:0.75, auxSea:3.5, auxIdle:3.0, boilerIdle:2.0},
+  panamax:  {label:"Panamax tanker",     serviceSpeed:14,   dailyFuelAtService:35, typicalDraught:12.0, mcrKw:11000, serviceLoad:0.75, auxSea:3.0, auxIdle:2.5, boilerIdle:1.5},
+  mr:       {label:"MR / Product tanker",serviceSpeed:14,   dailyFuelAtService:25, typicalDraught:11.0, mcrKw:8000,  serviceLoad:0.75, auxSea:2.5, auxIdle:2.0, boilerIdle:1.2}
 };
+const ENGINE_DEFAULTS = {minLoadPct:25, maxContLoadPct:90, weatherMarginPct:10};
 
 // Canal particulars (draught/air-draught limits only — the actual canal
 // locations are now part of the routing graph below as NODES).
@@ -1094,6 +1148,184 @@ function buildWaypointEtas(waypoints, mode, departure, speedKn){
   });
 }
 
+// ============================================================
+// VOYAGE FUEL ESTIMATE — the way a chief engineer works it out
+//  1. Main engine power from the Admiralty relation P ∝ Δ^(2/3) · V³,
+//     calibrated on the ship's service point (MT/day at service speed, laden).
+//     Displacement Δ is taken from the actual mean draught (Δ ≈ ∝ T for a
+//     full tanker hull), so ballast/part-laden is handled by the draught itself.
+//  2. Weather (sea) margin added to the power.
+//  3. SFOC rises away from the engine's optimum load (~75% MCR), especially
+//     at low load — so fuel/day does NOT fall with the pure cube law.
+//  4. Generators and boiler counted separately (they burn fuel at any speed);
+//     the oil-fired boiler takes over as the exhaust-gas economiser output
+//     drops at low main-engine load.
+//  5. The main engine is not run below its minimum continuous load: if the
+//     ETA would need a slower speed, the plan sails at the minimum-load speed
+//     and waits at anchor (generators + boiler) for the remaining time.
+//  6. Fuel split by grade: inside ECA/SECA → MGO (≤0.10% S), outside → VLSFO.
+// ============================================================
+function readEngineInputs(profile){
+  const num=(id,def)=>{ const el=document.getElementById(id); const v=el?parseFloat(el.value):NaN; return Number.isFinite(v)?v:def; };
+  return {
+    serviceSpeed: num('engServiceSpeed', profile.serviceSpeed),
+    meAtService:  num('engMeCons', profile.dailyFuelAtService),
+    mcrKw:        num('engMcr', profile.mcrKw),
+    serviceLoad:  profile.serviceLoad,
+    auxSea:       num('engAuxSea', profile.auxSea),
+    auxIdle:      num('engAuxIdle', profile.auxIdle),
+    boilerIdle:   num('engBoilerIdle', profile.boilerIdle),
+    minLoadPct:   num('engMinLoad', ENGINE_DEFAULTS.minLoadPct),
+    maxContLoadPct: ENGINE_DEFAULTS.maxContLoadPct,
+    weatherMarginPct: num('engWeatherMargin', ENGINE_DEFAULTS.weatherMarginPct),
+    typicalDraught: profile.typicalDraught
+  };
+}
+
+// Relative SFOC vs engine load (1.00 at ~75% MCR; ≈ +10% at 25% MCR,
+// ≈ +23% at 10%). Indicative two-stroke curve shape — replace with the
+// engine's shop-test SFOC curve when available.
+function sfocRelative(load){ return 1 + 0.4*Math.pow(load-0.75, 2); }
+
+// Nautical miles of the route that lie inside an ECA/SECA (each leg sampled).
+function ecaDistanceNm(waypoints, mode){
+  let nm=0;
+  for(let i=0;i<waypoints.length-1;i++){
+    const a=waypoints[i], b=waypoints[i+1];
+    const leg = mode==='rhumbline' ? rhumbBearingDistance(a,b).distance : haversineNm(a,b);
+    const n = Math.max(4, Math.ceil(leg/20));
+    let inside=0;
+    for(let k=0;k<n;k++){ const pt=interpolatePoint(a,b,(k+0.5)/n,mode); if(findECAZone(pt.lat,pt.lon)) inside++; }
+    nm += leg*inside/n;
+  }
+  return nm;
+}
+
+function computeFuelPlan(o){
+  // o: {distanceNm, hoursAvailable, waypoints, routingMode, draught, engine, robVlsfo, robMgo, policyParams}
+  const E=o.engine;
+  const draughtRatio = Math.min(1.15, Math.max(0.35, (o.draught||E.typicalDraught)/E.typicalDraught));
+  const dispFactor = Math.pow(draughtRatio, 2/3);
+  const margin = 1 + E.weatherMarginPct/100;
+  const loadAt = v => E.serviceLoad * Math.pow(v/E.serviceSpeed,3) * dispFactor * margin;
+  const speedAtLoad = L => E.serviceSpeed * Math.cbrt(L/(E.serviceLoad*dispFactor*margin));
+  const minSpeed = speedAtLoad(E.minLoadPct/100);
+  const maxContSpeed = speedAtLoad(E.maxContLoadPct/100);
+  const mcrSpeed = speedAtLoad(1);
+
+  const requiredSpeed = o.distanceNm / o.hoursAvailable;
+  let sailSpeed = requiredSpeed, speedStatus = 'ok';
+  if(requiredSpeed < minSpeed){ sailSpeed = minSpeed; speedStatus = 'belowMin'; }
+  else if(requiredSpeed > mcrSpeed){ speedStatus = 'aboveMcr'; }
+  else if(requiredSpeed > maxContSpeed){ speedStatus = 'aboveCont'; }
+
+  const sailHours = o.distanceNm / sailSpeed;
+  let waitHours = Math.max(0, o.hoursAvailable - sailHours);
+  // Eco-speed (company policy): maximum fuel economy for a fixed ETA = sail as
+  // slowly as the engine allows AND arrive exactly on the ETA (Just-In-Time).
+  // If even the minimum-load speed is too fast, the departure is postponed by
+  // the time that would otherwise be spent waiting at the destination anchorage.
+  const eco = !!(o.policyParams && o.policyParams.ecoSpeed);
+  const jitDelayHours = (eco && waitHours > 0.5) ? waitHours : 0;
+  if(jitDelayHours) waitHours = 0;
+  const seaDays = sailHours/24, waitDays = waitHours/24;
+
+  const load = loadAt(sailSpeed);
+  const meDaily = E.meAtService * (load/E.serviceLoad) * sfocRelative(load)/sfocRelative(E.serviceLoad);
+  const boilerSeaDaily = E.boilerIdle * Math.min(1, Math.max(0, (0.5-load)/0.25));
+  const seaDaily = meDaily + E.auxSea + boilerSeaDaily;
+  const idleDaily = E.auxIdle + E.boilerIdle;
+
+  const me = meDaily*seaDays, auxSea = E.auxSea*seaDays, boilerSea = boilerSeaDaily*seaDays;
+  const waiting = idleDaily*waitDays;
+  const total = me + auxSea + boilerSea + waiting;
+
+  const ecaNm = ecaDistanceNm(o.waypoints, o.routingMode);
+  const ecaFrac = o.distanceNm>0 ? Math.min(1, ecaNm/o.distanceNm) : 0;
+  const dest = o.waypoints[o.waypoints.length-1];
+  const destInEca = !!findECAZone(dest.lat, dest.lon);
+  const mgo = (me+auxSea+boilerSea)*ecaFrac + (destInEca ? waiting : 0);
+  const vlsfo = total - mgo;
+
+  const pp = o.policyParams || {};
+  const reserve = pp.minReservePct!=null ? total*(pp.minReservePct/100) : Math.max(total*0.10, 3*seaDaily);
+  const reserveSource = pp.minReservePct!=null ? 'policy' : 'default';
+  const robVlsfoAfter = o.robVlsfo - vlsfo, robMgoAfter = o.robMgo - mgo;
+  const vlsfoShort = robVlsfoAfter < 0, mgoShort = robMgoAfter < 0;
+  const reserveShort = !vlsfoShort && !mgoShort && (robVlsfoAfter + robMgoAfter) < reserve;
+  const mgoLow = !mgoShort && robMgoAfter < 2*E.auxSea; // MGO kept for generators / emergencies
+
+  // fuel the anchorage waiting would have burned (what JIT departure saves)
+  const jitSaving = jitDelayHours/24 * idleDaily;
+  return {engine:E, eco, jitDelayHours, jitSaving, draughtRatio, dispFactor, requiredSpeed, sailSpeed, speedStatus, minSpeed, maxContSpeed, mcrSpeed,
+    load, loadKw: load*E.mcrKw, sfocRel: sfocRelative(load)/sfocRelative(E.serviceLoad),
+    seaDays, waitDays, meDaily, boilerSeaDaily, seaDaily, idleDaily,
+    me, auxSea, boilerSea, waiting, total, ecaNm, ecaFrac, destInEca, mgo, vlsfo,
+    reserve, reserveSource, robVlsfo:o.robVlsfo, robMgo:o.robMgo, robVlsfoAfter, robMgoAfter,
+    vlsfoShort, mgoShort, reserveShort, mgoLow};
+}
+
+function fuelSectionHtml(plan){
+  const f = plan.fuel, E = f.engine, pp = plan.policyParams || {};
+  const t = x => x.toFixed(1);
+  const policySpeedWarn = pp.maxSpeedKn!=null && f.sailSpeed > pp.maxSpeedKn;
+  let speedTag = '';
+  if(f.speedStatus==='belowMin' && f.jitDelayHours) speedTag = `<div class="result-sub" style="margin-top:4px;"><span class="tag ok">Eco-speed (πολιτική εταιρίας): Η ETA θα ήθελε ${t(f.requiredSpeed)} kn, κάτω από το ελάχιστο φορτίο μηχανής (${E.minLoadPct}% MCR). Αναχώρηση ${t(f.jitDelayHours/24)} ημέρες αργότερα, στις ${plan.jitDep ? plan.jitDep.toLocaleString('el-GR',{dateStyle:'short',timeStyle:'short'}) : ''}, με ${t(f.sailSpeed)} kn → άφιξη ακριβώς στην ETA, χωρίς αναμονή. Εξοικονόμηση ≈ ${t(f.jitSaving)} MT.</span></div>`;
+  else if(f.speedStatus==='belowMin') speedTag = `<div class="result-sub" style="margin-top:4px;"><span class="tag warn">Η ETA απαιτεί ${t(f.requiredSpeed)} kn — κάτω από το ελάχιστο φορτίο μηχανής (${E.minLoadPct}% MCR). Πλεύση με ${t(f.sailSpeed)} kn και αναμονή ${t(f.waitDays)} ημέρες στο αγκυροβόλιο (ή μεταγενέστερη αναχώρηση). Με «eco-speed» στην πολιτική εταιρίας υπολογίζεται αυτόματα η αναχώρηση για άφιξη ακριβώς στην ETA.</span></div>`;
+  else if(f.eco && f.speedStatus==='ok') speedTag = `<div class="result-sub" style="margin-top:4px;"><span class="tag ok">Eco-speed (πολιτική εταιρίας): πλεύση με την ελάχιστη ταχύτητα που τηρεί την ETA — άφιξη ακριβώς στην ETA.</span></div>`;
+  else if(f.speedStatus==='aboveCont') speedTag = `<div class="result-sub" style="margin-top:4px;"><span class="tag warn">Φορτίο μηχανής ${(f.load*100).toFixed(0)}% MCR — πάνω από το όριο συνεχούς λειτουργίας (${E.maxContLoadPct}% MCR).</span></div>`;
+  else if(f.speedStatus==='aboveMcr') speedTag = `<div class="result-sub" style="margin-top:4px;"><span class="tag danger">Απαιτεί ${(f.load*100).toFixed(0)}% MCR — μη εφικτό. Η ETA δεν μπορεί να τηρηθεί (μέγιστη ταχύτητα ≈ ${t(f.mcrSpeed)} kn με αυτό το βύθισμα και περιθώριο καιρού).</span></div>`;
+
+  const short = f.vlsfoShort || f.mgoShort;
+  const robLine = (name, rob, need, after, isShort) =>
+    `<div class="result-sub">${name}: ROB ${t(rob)} − ${t(need)} = <strong class="${isShort?'danger':''}">${t(after)} MT</strong>${isShort?' <span class="tag danger">Ανεπαρκές</span>':''}</div>`;
+  const row = (label, daily, total) => `<tr style="border-top:1px dashed var(--line);"><td style="padding:3px 6px 3px 0;">${label}</td><td style="padding:3px 6px; text-align:right;">${daily}</td><td style="padding:3px 0; text-align:right;">${total}</td></tr>`;
+
+  return `<div class="result-block" style="background:var(--navy-800); border-radius:8px; padding:14px 16px; border-bottom:none;">
+    <div class="result-label">Καύσιμα που θα χρειαστείς</div>
+    <div class="result-value" style="font-size:30px;">${t(f.total)} MT</div>
+    <div class="result-sub">VLSFO ${t(f.vlsfo)} MT · MGO ${t(f.mgo)} MT — για ${plan.distanceNm.toFixed(0)} nm στα ${t(f.sailSpeed)} kn (${t(f.seaDays)} ημέρες πλεύσης${f.waitDays>0.05?` + ${t(f.waitDays)} ημέρες αναμονής`:''})</div>
+  </div>
+
+  <div class="result-block">
+    <div class="result-label">Ταχύτητα & φορτίο μηχανής</div>
+    <div class="result-value ${f.speedStatus==='aboveMcr'||policySpeedWarn?'danger':''}">${t(f.sailSpeed)} kn · ${(f.load*100).toFixed(0)}% MCR</div>
+    <div class="result-sub">Απαιτούμενη μέση ταχύτητα για την ETA: ${t(f.requiredSpeed)} kn · εύρος μηχανής με αυτό το βύθισμα: ${t(f.minSpeed)}–${t(f.maxContSpeed)} kn (${E.minLoadPct}–${E.maxContLoadPct}% MCR)</div>
+    <div class="result-sub">Ισχύς ≈ ${Math.round(f.loadKw).toLocaleString('el-GR')} kW από ${E.mcrKw.toLocaleString('el-GR')} kW MCR · SFOC ${f.sfocRel>=1?'+':''}${((f.sfocRel-1)*100).toFixed(0)}% σε σχέση με το βέλτιστο φορτίο</div>
+    ${speedTag}
+    ${policySpeedWarn ? `<div class="result-sub" style="margin-top:4px;"><span class="tag warn">Υπερβαίνει το όριο πολιτικής εταιρίας (${pp.maxSpeedKn} kn)</span></div>` : ''}
+  </div>
+
+  <div class="result-block">
+    <div class="result-label">Ανάλυση κατανάλωσης</div>
+    <table style="width:100%; font-family:var(--mono); font-size:11px; border-collapse:collapse;">
+      <thead><tr style="color:var(--muted); text-align:left;"><th style="padding:3px 6px 3px 0;">Καταναλωτής</th><th style="padding:3px 6px; text-align:right;">MT/ημέρα</th><th style="padding:3px 0; text-align:right;">MT ταξιδιού</th></tr></thead>
+      <tbody>
+        ${row('Κύρια μηχανή (πλεύση)', t(f.meDaily), t(f.me))}
+        ${row('Γεννήτριες (πλεύση)', t(E.auxSea), t(f.auxSea))}
+        ${row('Λέβητας (πλεύση, χαμηλό φορτίο)', t(f.boilerSeaDaily), t(f.boilerSea))}
+        ${f.waitDays>0.05 ? row(`Αναμονή αγκυροβολίου (${t(f.waitDays)} ημ.)`, t(f.idleDaily), t(f.waiting)) : ''}
+        <tr style="border-top:1px solid var(--line); color:var(--teal);"><td style="padding:3px 6px 3px 0;"><strong>Σύνολο</strong></td><td></td><td style="padding:3px 0; text-align:right;"><strong>${t(f.total)}</strong></td></tr>
+      </tbody>
+    </table>
+    <div class="result-sub" style="margin-top:6px;">Μέσα σε ECA/SECA: ${f.ecaNm.toFixed(0)} nm (${(f.ecaFrac*100).toFixed(0)}% της διαδρομής) → MGO ${t(f.mgo)} MT${f.destInEca&&f.waitDays>0.05?' (μαζί με την αναμονή, ο προορισμός είναι σε ECA)':''} · εκτός ECA → VLSFO ${t(f.vlsfo)} MT</div>
+  </div>
+
+  <div class="result-block">
+    <div class="result-label">ROB καυσίμων (αναχώρηση → άφιξη)</div>
+    ${robLine('VLSFO', f.robVlsfo, f.vlsfo, f.robVlsfoAfter, f.vlsfoShort)}
+    ${robLine('MGO', f.robMgo, f.mgo, f.robMgoAfter, f.mgoShort)}
+    <div class="result-sub" style="margin-top:6px;">${short ? '<span class="tag danger">Ανεπαρκή καύσιμα για το ταξίδι — απαιτείται bunkering</span>'
+      : (f.reserveShort ? `<span class="tag warn">Σύνολο ROB στην άφιξη κάτω από το απόθεμα ασφαλείας (${t(f.reserve)} MT)</span>` : `<span class="tag ok">Πάνω από το απόθεμα ασφαλείας (${t(f.reserve)} MT)</span>`)}
+      ${f.mgoLow ? '<span class="tag warn">Χαμηλό MGO στην άφιξη (< 2 ημέρες γεννητριών)</span>' : ''}</div>
+    <div class="result-sub">Απόθεμα: ${f.reserveSource==='policy' ? `${pp.minReservePct}% της κατανάλωσης (πολιτική εταιρίας)` : 'το μεγαλύτερο από 10% της κατανάλωσης ή 3 ημέρες πλεύσης'}</div>
+  </div>
+
+  <div class="result-block">
+    <div class="result-sub">Μέθοδος: ισχύς κατά Admiralty (P ∝ Δ<sup>2/3</sup>·V³), εκτόπισμα από το μέσο βύθισμα ${plan.draught.toFixed(1)} / ${E.typicalDraught.toFixed(1)} m (×${f.dispFactor.toFixed(2)}), περιθώριο καιρού ${E.weatherMarginPct}%, καμπύλη SFOC ανά φορτίο, γεννήτριες και λέβητας χωριστά. Τα στοιχεία μηχανής είναι <strong>ενδεικτικά ανά κλάση</strong> εκτός αν τα αλλάξεις στη φόρμα με τα στοιχεία shop test / sea trial του πλοίου. Δεν περιλαμβάνονται: χειρισμοί/λιμάνι, διέλευση διωρύγων, θέρμανση φορτίου, tank cleaning.</div>
+  </div>`;
+}
+
 // Checks draught/air draught against any canal the computed path passes through
 function checkCanalRestrictions(pathKeys, draught, airDraught){
   const warnings=[];
@@ -1494,30 +1726,18 @@ function recomputePlanAfterEdit(){
 
   plan.distanceNm = routeDistanceNm(plan.waypoints, plan.routingMode);
   plan.requiredSpeed = plan.distanceNm / plan.hoursAvailable;
-  plan.waypointEtas = buildWaypointEtas(plan.waypoints, plan.routingMode, plan.dep, plan.requiredSpeed);
-  const speedRatio = plan.requiredSpeed / plan.profile.serviceSpeed;
-  const loadFactor = plan.loadState==='laden' ? 1.12 : 1.0;
-  plan.estFuel = plan.profile.dailyFuelAtService * Math.pow(speedRatio,3) * loadFactor * plan.days;
-  plan.remainingFuel = plan.fuelAvailable - plan.estFuel;
-  plan.minReserve = plan.policyParams && plan.policyParams.minReservePct!=null
-    ? plan.estFuel * (plan.policyParams.minReservePct/100)
-    : Math.max(plan.estFuel*0.10, plan.profile.dailyFuelAtService);
+  plan.fuel = computeFuelPlan({distanceNm:plan.distanceNm, hoursAvailable:plan.hoursAvailable, waypoints:plan.waypoints,
+    routingMode:plan.routingMode, draught:plan.draught, engine:plan.engine, robVlsfo:plan.robVlsfo, robMgo:plan.robMgo, policyParams:plan.policyParams});
+  plan.estFuel = plan.fuel.total;
+  // ETAs per waypoint follow the speed actually sailed (any waiting happens at the destination anchorage)
+  plan.jitDep = plan.fuel.jitDelayHours ? new Date(plan.dep.getTime() + plan.fuel.jitDelayHours*3600000) : null;
+  plan.waypointEtas = buildWaypointEtas(plan.waypoints, plan.routingMode, plan.jitDep || plan.dep, plan.fuel.sailSpeed);
 
   renderRouteOnMap(plan.waypoints);
 
-  const speedWarn = plan.requiredSpeed > plan.profile.serviceSpeed*1.15;
-  const fuelWarn = plan.estFuel > plan.fuelAvailable;
-  const reserveWarn = !fuelWarn && plan.remainingFuel < plan.minReserve;
-
   const set = (id, html)=>{ const el=document.getElementById(id); if(el) el.innerHTML = html; };
-  set('estFuelValue', plan.estFuel.toFixed(1)+' MT');
-  set('fuelSubText', `για ${plan.distanceNm.toFixed(0)} nm στα ${plan.requiredSpeed.toFixed(1)} kn (${plan.days.toFixed(1)} ημέρες πλεύσης)`);
+  set('fuelSection', fuelSectionHtml(plan));
   set('routeDistanceText', `${plan.distanceNm.toFixed(0)} nm συνολικά (ενημερώθηκε) · ${plan.waypoints.length} waypoints`);
-  const speedValEl = document.getElementById('requiredSpeedValue');
-  if(speedValEl){ speedValEl.textContent = plan.requiredSpeed.toFixed(1)+' kn'; speedValEl.classList.toggle('danger', speedWarn); }
-  set('speedSubText', `Service speed ${plan.profile.label}: ~${plan.profile.serviceSpeed} kn ${speedWarn?'<span class="tag danger">Μη εφικτό στο service speed</span>':''}`);
-  set('fuelWarnText', fuelWarn ? '<span class="tag danger">Ανεπαρκή καύσιμα για το ταξίδι</span>' : '');
-  set('remainingFuelText', !fuelWarn ? `Υπόλοιπο μετά το ταξίδι: <strong>${plan.remainingFuel.toFixed(1)} MT</strong> ${reserveWarn ? '<span class="tag warn">Κάτω από ελάχιστο απόθεμα ασφαλείας ('+plan.minReserve.toFixed(1)+' MT)</span>' : '<span class="tag ok">Πάνω από ελάχιστο απόθεμα ασφαλείας</span>'}` : '');
 
   const tbody = document.querySelector('#detailedTable tbody');
   if(tbody) tbody.innerHTML = detailedRowsHtml(plan.waypoints, plan.liveWeather, plan.depths, plan.draught, plan.seamarks);
@@ -1651,6 +1871,18 @@ function populateSelects(){
 }
 populateSelects();
 
+// Fills the engine/consumption fields with the class defaults for the selected
+// tanker type (the person can then overwrite them with the ship's own data).
+function fillEngineDefaults(){
+  const pr = SHIP_PROFILES[document.getElementById('shipType').value];
+  const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v; };
+  set('engServiceSpeed', pr.serviceSpeed); set('engMeCons', pr.dailyFuelAtService); set('engMcr', pr.mcrKw);
+  set('engMinLoad', ENGINE_DEFAULTS.minLoadPct); set('engAuxSea', pr.auxSea); set('engAuxIdle', pr.auxIdle);
+  set('engBoilerIdle', pr.boilerIdle); set('engWeatherMargin', ENGINE_DEFAULTS.weatherMarginPct);
+}
+document.getElementById('shipType').addEventListener('change', fillEngineDefaults);
+fillEngineDefaults();
+
 async function calculatePlan(){
   const fromKey=document.getElementById('portFrom').value;
   const toKey=document.getElementById('portTo').value;
@@ -1724,28 +1956,22 @@ async function calculatePlan(){
   const shipType=document.getElementById('shipType').value;
   const profile=SHIP_PROFILES[shipType];
   const loadState=document.getElementById('loadState').value;
-  const loadFactor = loadState==='laden' ? 1.12 : 1.0; // laden καταναλώνει λίγο παραπάνω
-
-  // Fuel: cubic law σε σχέση με service speed
-  const speedRatio = requiredSpeed / profile.serviceSpeed;
   const days = hoursAvailable/24;
-  const estFuel = profile.dailyFuelAtService * Math.pow(speedRatio,3) * loadFactor * days;
+  const engine = readEngineInputs(profile);
+  const robVlsfo = parseFloat(document.getElementById('fuel').value)||0;
+  const robMgo = parseFloat(document.getElementById('fuelMgo').value)||0;
+  const fuel = computeFuelPlan({distanceNm, hoursAvailable, waypoints, routingMode, draught:getMeanDraught(),
+    engine, robVlsfo, robMgo, policyParams});
+  const estFuel = fuel.total;
+  // departure actually used for waypoint ETAs (postponed when eco-speed / JIT applies)
+  const jitDep = fuel.jitDelayHours ? new Date(dep.getTime() + fuel.jitDelayHours*3600000) : null;
 
-  const fuelAvailable=parseFloat(document.getElementById('fuel').value)||0;
   const airDraught=parseFloat(document.getElementById('airDraught').value)||0;
 
   // TODO: real hazard/security data (piracy, MSI/NAVTEX) has no simple free live
   // API — see the note below the form for the realistic production options.
 
   const canalWarnings = checkCanalRestrictions(waypoints.filter(w=>w.key).map(w=>w.key), getMeanDraught(), airDraught);
-
-  // Ελάχιστο απόθεμα καυσίμων ασφαλείας: από την πολιτική εταιρίας αν εντοπίστηκε
-  // ποσοστό στο αρχείο/κείμενο, αλλιώς προεπιλογή 10% της κατανάλωσης (ή 1 ημέρα, όποιο μεγαλύτερο)
-  const minReserve = policyParams.minReservePct!=null
-    ? estFuel * (policyParams.minReservePct/100)
-    : Math.max(estFuel*0.10, profile.dailyFuelAtService);
-  const remainingFuel = fuelAvailable - estFuel;
-  const policySpeedWarn = policyParams.maxSpeedKn!=null && requiredSpeed > policyParams.maxSpeedKn;
 
   let html = '';
 
@@ -1760,35 +1986,13 @@ async function calculatePlan(){
     </div>`;
   }
 
-  html += `<div class="result-block" style="background:var(--navy-800); border-radius:8px; padding:14px 16px; border-bottom:none;">
-    <div class="result-label">Καύσιμα που θα χρειαστείς</div>
-    <div class="result-value" id="estFuelValue" style="font-size:30px;">${estFuel.toFixed(1)} MT</div>
-    <div class="result-sub" id="fuelSubText">για ${distanceNm.toFixed(0)} nm στα ${requiredSpeed.toFixed(1)} kn (${days.toFixed(1)} ημέρες πλεύσης)</div>
-  </div>`;
-
   html += `<div class="result-block">
     <div class="result-label">Διαδρομή (${profile.label})</div>
     <div class="result-value">${from.label} → ${to.label}</div>
     <div class="result-sub" id="routeDistanceText">${distanceNm.toFixed(0)} nm συνολικά · ${waypoints.length} waypoints</div>
   </div>`;
 
-  const speedWarn = requiredSpeed > profile.serviceSpeed*1.15;
-  html += `<div class="result-block">
-    <div class="result-label">Απαιτούμενη μέση ταχύτητα</div>
-    <div class="result-value ${speedWarn||policySpeedWarn?'danger':''}" id="requiredSpeedValue">${requiredSpeed.toFixed(1)} kn</div>
-    <div class="result-sub" id="speedSubText">Service speed ${profile.label}: ~${profile.serviceSpeed} kn ${speedWarn?'<span class="tag danger">Μη εφικτό στο service speed</span>':''}</div>
-    ${policySpeedWarn ? `<div class="result-sub" style="margin-top:4px;"><span class="tag warn">Υπερβαίνει το όριο πολιτικής εταιρίας (${policyParams.maxSpeedKn} kn)</span></div>` : ''}
-  </div>`;
-
-  const fuelWarn = estFuel > fuelAvailable;
-  const reserveWarn = !fuelWarn && remainingFuel < minReserve;
-  html += `<div class="result-block">
-    <div class="result-label">Διαθέσιμα / υπόλοιπο καυσίμων</div>
-    <div class="result-value ${fuelWarn?'danger':''}">${fuelAvailable} MT διαθέσιμα</div>
-    <div class="result-sub" id="fuelWarnText">${fuelWarn?'<span class="tag danger">Ανεπαρκή καύσιμα για το ταξίδι</span>':''}</div>
-    <div class="result-sub" id="remainingFuelText" style="margin-top:6px;">${!fuelWarn ? `Υπόλοιπο μετά το ταξίδι: <strong>${remainingFuel.toFixed(1)} MT</strong>
-      ${reserveWarn ? '<span class="tag warn">Κάτω από ελάχιστο απόθεμα ασφαλείας ('+minReserve.toFixed(1)+' MT)</span>' : '<span class="tag ok">Πάνω από ελάχιστο απόθεμα ασφαλείας</span>'}` : ''}</div>
-  </div>`;
+  html += `<div id="fuelSection">${fuelSectionHtml({fuel, distanceNm, draught:getMeanDraught(), policyParams, jitDep})}</div>`;
 
   html += `<div class="result-block">
     <div class="result-label">Έλεγχος διωρύγων / γεφυρών</div>
@@ -1862,10 +2066,10 @@ async function calculatePlan(){
     <div id="pdfStatus" class="result-sub" style="margin-top:6px;"></div>
   </div>`;
 
-  const waypointEtas = buildWaypointEtas(waypoints, routingMode, dep, requiredSpeed);
+  const waypointEtas = buildWaypointEtas(waypoints, routingMode, jitDep || dep, fuel.sailSpeed);
   window.lastPlan = {
     fromKey, toKey, from, to, dep, arr, days, hoursAvailable, distanceNm, requiredSpeed, routingMode,
-    profile, loadState, estFuel, fuelAvailable, remainingFuel, minReserve,
+    profile, loadState, estFuel, engine, fuel, robVlsfo, robMgo, jitDep,
     draught: getMeanDraught(), trim: getTrim(), airDraught,
     vesselName: document.getElementById('vesselName').value.trim(), imoNo: document.getElementById('imoNo').value.trim(),
     voyageNo: document.getElementById('voyageNo').value.trim(), cargoQty: parseFloat(document.getElementById('cargoQty').value)||null,
@@ -2182,8 +2386,8 @@ const PDF_COLOR_LINE = () => PDFLib.rgb(0.8,0.8,0.8);
 // Noto Sans (the embedded PDF font) has no glyphs for these symbols, so they
 // were printed as empty boxes. Every string drawn into the PDF goes through
 // this first (verified by checking the font's cmap against all characters used).
-const PDF_GLYPH_FIX = {'\u2192':'\u2013', '\u2264':'<=', '\u2265':'>='};
-function pdfSafe(text){ return String(text).replace(/[\u2192\u2264\u2265]/g, c=>PDF_GLYPH_FIX[c]); }
+const PDF_GLYPH_FIX = {'\u2192':'\u2013', '\u2264':'<=', '\u2265':'>=', '\u2248':'~', '\u221d':'~'};
+function pdfSafe(text){ return String(text).replace(/[\u2192\u2264\u2265\u2248\u221d]/g, c=>PDF_GLYPH_FIX[c]); }
 if(window.PDFLib && !PDFLib.PDFPage.prototype._drawTextOrig){
   PDFLib.PDFPage.prototype._drawTextOrig = PDFLib.PDFPage.prototype.drawText;
   PDFLib.PDFPage.prototype.drawText = function(text, opts){ return this._drawTextOrig(pdfSafe(text), opts); };
@@ -2510,6 +2714,23 @@ const PDF_I18N = {
     navAidsTitle:'Βοηθήματα ναυσιπλοΐας (φάροι)', navAidsSub:'Φάροι εντοπισμένοι κοντά στη διαδρομή (OpenSeaMap, crowd-sourced)',
     lightsFoundSingular:'φάρος εντοπίστηκε σε ακτίνα ~11nm.', lightsFoundPlural:'φάροι εντοπίστηκαν σε ακτίνα ~11nm.',
     noLights:'Δεν εντοπίστηκαν φάροι κοντά στα σημεία της διαδρομής (ή τα δεδομένα δεν φόρτωσαν ακόμα κατά τη δημιουργία του PDF).',
+    fuelTitle:'Υπολογισμός καυσίμων', fuelSub:'Εκτίμηση κατανάλωσης ταξιδιού ανά καταναλωτή και ανά είδος καυσίμου',
+    sailSpeedLabel:'Ταχύτητα πλεύσης (σχέδιο)', meLoadLabel:'Φορτίο κύριας μηχανής', seaDaysLabel:'Ημέρες πλεύσης', waitDaysLabel:'Ημέρες αναμονής (αγκυροβόλιο)',
+    dispLabel:'Διόρθωση εκτοπίσματος (βύθισμα)', marginLabel:'Περιθώριο καιρού', engineRange:'Εύρος ταχύτητας μηχανής',
+    consumerCol:'Καταναλωτής', perDayCol:'MT/ημέρα', voyageCol:'MT ταξιδιού',
+    cME:'Κύρια μηχανή (πλεύση)', cAux:'Γεννήτριες (πλεύση)', cBoiler:'Λέβητας (πλεύση)', cWait:'Αναμονή αγκυροβολίου', cTotal:'Σύνολο',
+    gradeTitle:'Ανά είδος καυσίμου', gradeEca:'Μέσα σε ECA/SECA', gradeVlsfo:'VLSFO (εκτός ECA)', gradeMgo:'MGO (εντός ECA)',
+    robTitle:'ROB καυσίμων', robDep:'Αναχώρηση', robNeed:'Κατανάλωση', robArr:'Άφιξη',
+    reserveLabel:'Απόθεμα ασφαλείας', reservePolicy:'της κατανάλωσης (πολιτική εταιρίας)', reserveDefault:'μεγαλύτερο από 10% της κατανάλωσης ή 3 ημέρες πλεύσης',
+    wBelowMin:'Η ETA απαιτεί {req} kn — κάτω από το ελάχιστο φορτίο μηχανής ({min}% MCR). Πλεύση με {sail} kn και αναμονή {wait} ημέρες στο αγκυροβόλιο (ή μεταγενέστερη αναχώρηση).',
+    jitDepLabel:'Αναχώρηση eco-speed (JIT)',
+    wJit:'Eco-speed (πολιτική εταιρίας): η ETA θα ήθελε {req} kn, κάτω από το ελάχιστο φορτίο μηχανής ({min}% MCR). Αναχώρηση {h} ημέρες αργότερα ({dep}) με {sail} kn — άφιξη ακριβώς στην ETA, χωρίς αναμονή. Εξοικονόμηση ≈ {save} MT.',
+    wEcoOk:'Eco-speed (πολιτική εταιρίας): πλεύση με την ελάχιστη ταχύτητα που τηρεί την ETA — άφιξη ακριβώς στην ETA.',
+    wAboveCont:'Φορτίο μηχανής {load}% MCR — πάνω από το όριο συνεχούς λειτουργίας ({max}% MCR).',
+    wAboveMcr:'Απαιτεί {load}% MCR — μη εφικτό. Η ETA δεν μπορεί να τηρηθεί (μέγιστη ταχύτητα ≈ {vmax} kn).',
+    wShort:'Ανεπαρκή καύσιμα για το ταξίδι — απαιτείται bunkering.', wReserve:'Σύνολο ROB στην άφιξη κάτω από το απόθεμα ασφαλείας.', wMgoLow:'Χαμηλό MGO στην άφιξη (< 2 ημέρες γεννητριών).', okReserve:'ROB στην άφιξη πάνω από το απόθεμα ασφαλείας.',
+    fuelMethod:'Μέθοδος: ισχύς κατά Admiralty (P ∝ Δ^(2/3)·V³) βαθμονομημένη στο service point, εκτόπισμα από το μέσο βύθισμα, περιθώριο καιρού, καμπύλη SFOC ανά φορτίο, γεννήτριες και λέβητας χωριστά, ελάχιστο φορτίο κύριας μηχανής με αναμονή. Στοιχεία μηχανής: {src}. Δεν περιλαμβάνονται χειρισμοί/λιμάνι, διέλευση διωρύγων, θέρμανση φορτίου, tank cleaning.',
+    srcIndicative:'ενδεικτικά ανά κλάση πλοίου — να αντικατασταθούν με shop test / sea trial του πλοίου', srcCustom:'όπως δόθηκαν στη φόρμα',
     wheelOverTitle:'Σημεία αλλαγής πορείας (wheel-over) & ώρες', wheelOverSub:'Βάσει σταθερής ταχύτητας',
     cumDistCol:'Αθρ. απόσταση (nm)', etaCol:'Εκτιμ. ώρα διέλευσης',
     emergencyTitle:'Σχέδιο έκτακτης ανάγκης', emergencySub:'Γενικές διαδικασίες αναφοράς — να συμπληρωθεί με το ειδικό σχέδιο του πλοίου',
@@ -2584,6 +2805,23 @@ const PDF_I18N = {
     navAidsTitle:'Navigation aids (lighthouses)', navAidsSub:'Lighthouses found near the route (OpenSeaMap, crowd-sourced)',
     lightsFoundSingular:'lighthouse found within ~11nm.', lightsFoundPlural:'lighthouses found within ~11nm.',
     noLights:'No lighthouses were found near the points on this route (or the data had not loaded yet while generating the PDF).',
+    fuelTitle:'Fuel calculation', fuelSub:'Voyage consumption estimate per consumer and per fuel grade',
+    sailSpeedLabel:'Planned sailing speed', meLoadLabel:'Main engine load', seaDaysLabel:'Days at sea', waitDaysLabel:'Days waiting (anchorage)',
+    dispLabel:'Displacement correction (draught)', marginLabel:'Weather margin', engineRange:'Engine speed range',
+    consumerCol:'Consumer', perDayCol:'MT/day', voyageCol:'MT voyage',
+    cME:'Main engine (at sea)', cAux:'Generators (at sea)', cBoiler:'Boiler (at sea)', cWait:'Anchorage waiting', cTotal:'Total',
+    gradeTitle:'Per fuel grade', gradeEca:'Inside ECA/SECA', gradeVlsfo:'VLSFO (outside ECA)', gradeMgo:'MGO (inside ECA)',
+    robTitle:'Fuel ROB', robDep:'Departure', robNeed:'Consumption', robArr:'Arrival',
+    reserveLabel:'Safety reserve', reservePolicy:'of consumption (company policy)', reserveDefault:'greater of 10% of consumption or 3 days at sea',
+    wBelowMin:'The ETA needs {req} kn — below the main engine minimum load ({min}% MCR). Sail at {sail} kn and wait {wait} days at anchor (or depart later).',
+    jitDepLabel:'Eco-speed departure (JIT)',
+    wJit:'Eco-speed (company policy): the ETA would need {req} kn, below the main engine minimum load ({min}% MCR). Depart {h} days later ({dep}) at {sail} kn — arrival exactly on the ETA, no waiting. Saving ≈ {save} MT.',
+    wEcoOk:'Eco-speed (company policy): sailing at the lowest speed that keeps the ETA — arrival exactly on the ETA.',
+    wAboveCont:'Engine load {load}% MCR — above the continuous service limit ({max}% MCR).',
+    wAboveMcr:'Needs {load}% MCR — not achievable. The ETA cannot be kept (max speed ≈ {vmax} kn).',
+    wShort:'Insufficient fuel for the voyage — bunkering required.', wReserve:'Total ROB on arrival below the safety reserve.', wMgoLow:'Low MGO on arrival (< 2 days of generators).', okReserve:'ROB on arrival above the safety reserve.',
+    fuelMethod:'Method: Admiralty power relation (P ∝ Δ^(2/3)·V³) calibrated on the service point, displacement from mean draught, weather margin, SFOC curve vs load, generators and boiler counted separately, main engine minimum load with waiting. Engine data: {src}. Not included: manoeuvring/port, canal transits, cargo heating, tank cleaning.',
+    srcIndicative:'indicative per ship class — replace with the ship’s shop test / sea trial data', srcCustom:'as entered in the form',
     wheelOverTitle:'Wheel-over points & times', wheelOverSub:'Based on constant speed of',
     cumDistCol:'Cum. distance (nm)', etaCol:'Est. time at point',
     emergencyTitle:'Emergency plan', emergencySub:"General reporting procedures — to be completed with the ship's specific plan",
@@ -2666,12 +2904,14 @@ async function generatePdfReport(lang){
     }
     pdfKeyValueRow(ctx,pdfDoc,fonts,L('airDraughtLabel'), `${plan.airDraught.toFixed(1)} m`);
     pdfKeyValueRow(ctx,pdfDoc,fonts,L('departure'), plan.dep.toLocaleString(locale));
+    if(plan.jitDep) pdfKeyValueRow(ctx,pdfDoc,fonts,L('jitDepLabel'), plan.jitDep.toLocaleString(locale,{dateStyle:'short',timeStyle:'short'}));
     pdfKeyValueRow(ctx,pdfDoc,fonts,L('etaLabel'), plan.arr.toLocaleString(locale));
     pdfKeyValueRow(ctx,pdfDoc,fonts,L('duration'), `${plan.days.toFixed(1)} ${L('days')}`);
     pdfKeyValueRow(ctx,pdfDoc,fonts,L('totalDist'), `${plan.distanceNm.toFixed(0)} nm`);
     pdfKeyValueRow(ctx,pdfDoc,fonts,L('courseType'), plan.routingMode==='rhumbline'?L('rhumb'):L('greatCircle'));
-    pdfKeyValueRow(ctx,pdfDoc,fonts,L('avgSpeed'), `${plan.requiredSpeed.toFixed(1)} kn`);
-    pdfKeyValueRow(ctx,pdfDoc,fonts,L('estFuel'), `${plan.estFuel.toFixed(1)} MT`);
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('avgSpeed'), `${plan.fuel.requiredSpeed.toFixed(1)} kn`);
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('sailSpeedLabel'), `${plan.fuel.sailSpeed.toFixed(1)} kn · ${(plan.fuel.load*100).toFixed(0)}% MCR`);
+    pdfKeyValueRow(ctx,pdfDoc,fonts,L('estFuel'), `${plan.fuel.total.toFixed(1)} MT  (VLSFO ${plan.fuel.vlsfo.toFixed(1)} · MGO ${plan.fuel.mgo.toFixed(1)})`);
     ctx.y -= 20;
     if(!fonts.ok){
       pdfParagraph(ctx,pdfDoc,L('fontWarn'), fonts.regular, 9, PDF_COLOR_WARN());
@@ -2720,6 +2960,58 @@ async function generatePdfReport(lang){
       const bearing = plan.routingMode==='rhumbline' ? ((toDeg(rhumbBearingDistance(a,b).bearing)+360)%360) : pdfInitialBearingGC(a,b);
       cumDist += legDist;
       pdfTableRow(ctx,pdfDoc,fonts,legCols,[`WP${i}→WP${i+1}`, bearing.toFixed(0)+'°', legDist.toFixed(1), cumDist.toFixed(1)]);
+    }
+
+    // ---- Fuel calculation (chief engineer's voyage estimate) ----
+    {
+      const f = plan.fuel, E = f.engine, t = x=>x.toFixed(1);
+      pdfPageHeader(ctx,pdfDoc,fonts,L('fuelTitle'), L('fuelSub'));
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('avgSpeed'), `${t(f.requiredSpeed)} kn`);
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('sailSpeedLabel'), `${t(f.sailSpeed)} kn`);
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('meLoadLabel'), `${(f.load*100).toFixed(0)}% MCR  (≈ ${Math.round(f.loadKw)} kW / ${E.mcrKw} kW)`);
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('engineRange'), `${t(f.minSpeed)} – ${t(f.maxContSpeed)} kn  (${E.minLoadPct}–${E.maxContLoadPct}% MCR)`);
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('dispLabel'), `${plan.draught.toFixed(1)} / ${E.typicalDraught.toFixed(1)} m  →  ×${f.dispFactor.toFixed(2)}`);
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('marginLabel'), `${E.weatherMarginPct}%`);
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('seaDaysLabel'), t(f.seaDays));
+      if(f.waitDays>0.05) pdfKeyValueRow(ctx,pdfDoc,fonts,L('waitDaysLabel'), t(f.waitDays));
+      ctx.y -= 4;
+      if(f.speedStatus==='belowMin' && f.jitDelayHours) pdfTagLine(ctx,pdfDoc,fonts,L('wJit').replace('{req}',t(f.requiredSpeed)).replace('{min}',E.minLoadPct).replace('{h}',t(f.jitDelayHours/24)).replace('{dep}',plan.jitDep.toLocaleString(lang==='en'?'en-GB':'el-GR',{dateStyle:'short',timeStyle:'short'})).replace('{sail}',t(f.sailSpeed)).replace('{save}',t(f.jitSaving)),null);
+      else if(f.eco && f.speedStatus==='ok') pdfTagLine(ctx,pdfDoc,fonts,L('wEcoOk'),null);
+      else if(f.speedStatus==='belowMin') pdfTagLine(ctx,pdfDoc,fonts,L('wBelowMin').replace('{req}',t(f.requiredSpeed)).replace('{min}',E.minLoadPct).replace('{sail}',t(f.sailSpeed)).replace('{wait}',t(f.waitDays)),'warn');
+      if(f.speedStatus==='aboveCont') pdfTagLine(ctx,pdfDoc,fonts,L('wAboveCont').replace('{load}',(f.load*100).toFixed(0)).replace('{max}',E.maxContLoadPct),'warn');
+      if(f.speedStatus==='aboveMcr') pdfTagLine(ctx,pdfDoc,fonts,L('wAboveMcr').replace('{load}',(f.load*100).toFixed(0)).replace('{vmax}',t(f.mcrSpeed)),'danger');
+      ctx.y -= 6;
+      const fc=[{label:L('consumerCol'),w:240},{label:L('perDayCol'),w:100},{label:L('voyageCol'),w:100}];
+      pdfTableHeader(ctx,pdfDoc,fonts,fc);
+      pdfTableRow(ctx,pdfDoc,fonts,fc,[L('cME'), t(f.meDaily), t(f.me)]);
+      pdfTableRow(ctx,pdfDoc,fonts,fc,[L('cAux'), t(E.auxSea), t(f.auxSea)]);
+      pdfTableRow(ctx,pdfDoc,fonts,fc,[L('cBoiler'), t(f.boilerSeaDaily), t(f.boilerSea)]);
+      if(f.waitDays>0.05) pdfTableRow(ctx,pdfDoc,fonts,fc,[L('cWait')+` (${t(f.waitDays)})`, t(f.idleDaily), t(f.waiting)]);
+      pdfTableRow(ctx,pdfDoc,fonts,fc,[L('cTotal'), '', t(f.total)], PDF_COLOR_HEAD());
+      ctx.y -= 10;
+      pdfEnsureSpace(ctx,pdfDoc,20);
+      ctx.page.drawText(L('gradeTitle'), {x:PDF_MARGIN, y:ctx.y, size:11, font:fonts.bold, color:PDF_COLOR_HEAD()}); ctx.y -= 16;
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('gradeEca'), `${f.ecaNm.toFixed(0)} nm (${(f.ecaFrac*100).toFixed(0)}%)`);
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('gradeVlsfo'), `${t(f.vlsfo)} MT`);
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('gradeMgo'), `${t(f.mgo)} MT`);
+      ctx.y -= 10;
+      pdfEnsureSpace(ctx,pdfDoc,20);
+      ctx.page.drawText(L('robTitle'), {x:PDF_MARGIN, y:ctx.y, size:11, font:fonts.bold, color:PDF_COLOR_HEAD()}); ctx.y -= 16;
+      const rc=[{label:'',w:110},{label:L('robDep'),w:100},{label:L('robNeed'),w:100},{label:L('robArr'),w:100}];
+      pdfTableHeader(ctx,pdfDoc,fonts,rc);
+      pdfTableRow(ctx,pdfDoc,fonts,rc,['VLSFO', t(f.robVlsfo), t(f.vlsfo), t(f.robVlsfoAfter)], f.vlsfoShort?PDF_COLOR_DANGER():null);
+      pdfTableRow(ctx,pdfDoc,fonts,rc,['MGO', t(f.robMgo), t(f.mgo), t(f.robMgoAfter)], f.mgoShort?PDF_COLOR_DANGER():null);
+      ctx.y -= 6;
+      pdfKeyValueRow(ctx,pdfDoc,fonts,L('reserveLabel'), `${t(f.reserve)} MT`);
+      pdfParagraph(ctx,pdfDoc,'('+(f.reserveSource==='policy' ? plan.policyParams.minReservePct+'% '+L('reservePolicy') : L('reserveDefault'))+')', fonts.regular, 8.5, PDF_COLOR_MUTED());
+      if(f.vlsfoShort||f.mgoShort) pdfTagLine(ctx,pdfDoc,fonts,L('wShort'),'danger');
+      else if(f.reserveShort) pdfTagLine(ctx,pdfDoc,fonts,L('wReserve'),'warn');
+      else pdfTagLine(ctx,pdfDoc,fonts,L('okReserve'),null);
+      if(f.mgoLow) pdfTagLine(ctx,pdfDoc,fonts,L('wMgoLow'),'warn');
+      ctx.y -= 6;
+      const p0 = SHIP_PROFILES[document.getElementById('shipType').value];
+      const custom = E.serviceSpeed!==p0.serviceSpeed || E.meAtService!==p0.dailyFuelAtService || E.mcrKw!==p0.mcrKw || E.auxSea!==p0.auxSea || E.auxIdle!==p0.auxIdle || E.boilerIdle!==p0.boilerIdle;
+      pdfParagraph(ctx,pdfDoc,L('fuelMethod').replace('{src}', custom?L('srcCustom'):L('srcIndicative')), fonts.regular, 8.5, PDF_COLOR_MUTED());
     }
 
     // ---- Depths & draught (UKC) ----
@@ -2821,7 +3113,7 @@ async function generatePdfReport(lang){
     }
 
     // ---- Wheel-over points & times ----
-    pdfPageHeader(ctx,pdfDoc,fonts,L('wheelOverTitle'), `${L('wheelOverSub')} ${plan.requiredSpeed.toFixed(1)} kn`);
+    pdfPageHeader(ctx,pdfDoc,fonts,L('wheelOverTitle'), `${L('wheelOverSub')} ${plan.fuel.sailSpeed.toFixed(1)} kn`);
     const woCols = [{label:L('wp'),w:35},{label:L('point'),w:170},{label:L('cumDistCol'),w:120},{label:L('etaCol'),w:150}];
     pdfTableHeader(ctx,pdfDoc,fonts,woCols,plan.waypoints.length);
     let cum2 = 0;
@@ -2830,8 +3122,8 @@ async function generatePdfReport(lang){
         const a=plan.waypoints[i-1];
         cum2 += plan.routingMode==='rhumbline' ? rhumbBearingDistance(a,w).distance : haversineNm(a,w);
       }
-      const hoursIn = cum2 / plan.requiredSpeed;
-      const eta = new Date(plan.dep.getTime() + hoursIn*3600000);
+      const hoursIn = cum2 / plan.fuel.sailSpeed;
+      const eta = new Date((plan.jitDep || plan.dep).getTime() + hoursIn*3600000);
       pdfTableRow(ctx,pdfDoc,fonts,woCols,[`WP${i}`, w.label, cum2.toFixed(1), eta.toLocaleString(locale)]);
     });
 
